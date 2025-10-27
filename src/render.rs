@@ -1,52 +1,52 @@
-use std::{error::Error, io::{stdout, Cursor, Stdout, Write}};
+use std::{error::Error, io::{stdout, Write}};
 
 use crossterm::{cursor, execute, terminal::{self, Clear, ClearType}};
 
-use crate::window::{Position, Window, WindowType};
+use crate::{component::Component, window::{Position, WindowType}};
 
-pub fn render(active_windows: &mut Vec<Window>) -> Result<(), Box<dyn Error>> {
+pub fn render(active_components: &mut Vec<Component>) -> Result<(), Box<dyn Error>> {
     let (width, height) = terminal::size()?;
 
-    let (mut top_windows, mut center_windows, mut bottom_windows) =
+    let (mut top_components, mut center_components, mut bottom_components) =
         (Vec::new(), Vec::new(), Vec::new());
-    for window in active_windows {
-        match window.window_type {
-            WindowType::Tile => match window.position {
-                Position::Top => top_windows.push(window),
-                Position::Center => center_windows.push(window),
-                Position::Bottom => bottom_windows.push(window),
+    for component in active_components {
+        match component.window.window_type {
+            WindowType::Tile => match component.window.position {
+                Position::Top => top_components.push(component),
+                Position::Center => center_components.push(component),
+                Position::Bottom => bottom_components.push(component),
             },
             WindowType::Floating => {}
         }
     }
 
     let mut center_height = height;
-    for window in top_windows.iter().chain(bottom_windows.iter()) {
-        center_height -= window.height.unwrap_or_else(|| 0);
+    for component in  top_components.iter().chain(bottom_components.iter()) {
+        center_height -= component.window.height.unwrap_or_else(|| 0);
     }
 
     let mut center_flexible_width = width;
-    for window in &center_windows {
-        if !window.flexible_x {
-            center_flexible_width -= window.width.unwrap_or_else(|| 0);
+    for component in &center_components {
+        if !component.window.flexible_x {
+            center_flexible_width -= component.window.width.unwrap_or_else(|| 0);
         }
     }
 
-    let center_flexible_window_width = center_flexible_width / center_windows.len() as u16;
+    let center_flexible_window_width = center_flexible_width / center_components.len() as u16;
 
-    for window in center_windows.iter_mut() {
-        window.window_height = center_height;
-        if window.flexible_x {
-            window.window_width = center_flexible_window_width;
+    for component in center_components.iter_mut() {
+        component.window.window_height = center_height;
+        if component.window.flexible_x {
+            component.window.window_width = center_flexible_window_width;
         }
     }
     
-    draw(center_windows);
+    draw(center_components)?;
     
     Ok(())
 }
 
-pub fn draw(center_windows: Vec<&mut Window>) -> Result<(), Box<dyn Error>> {
+pub fn draw(center_components: Vec<&mut Component>) -> Result<(), Box<dyn Error>> {
     let mut stdout = stdout();
     execute!(
         stdout,
@@ -56,12 +56,12 @@ pub fn draw(center_windows: Vec<&mut Window>) -> Result<(), Box<dyn Error>> {
     )?;
 
     let mut min_x = 0;
-    for window in center_windows{
-        for (y, line) in window.content.iter().enumerate(){
+    for component in center_components{
+        for (y, line) in component.window.content.iter().enumerate(){
             execute!(stdout, cursor::MoveTo(min_x, y as u16))?;
             writeln!(stdout, "{}", line)?;
         }
-        min_x += window.window_width
+        min_x += component.window.window_width
     }
 
     stdout.flush()?;

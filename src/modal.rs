@@ -1,4 +1,4 @@
-use crate::input::InputEvent;
+use crate::{component::{Action, TextActions}, input::InputEvent};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mode {
@@ -10,17 +10,17 @@ pub enum Mode {
 }
 
 /// The “mother” function — routes input to the right mode handler.
-pub fn handle_mode_input(mode: &mut Mode, event: InputEvent) {
+pub fn handle_mode_input(mode: &mut Mode, event: InputEvent) -> Action {
     match mode {
         Mode::Normal => handle_normal_mode(mode, event),
         Mode::Insert => handle_insert_mode(mode, event),
         Mode::Visual => handle_visual_mode(mode, event),
         Mode::Command => handle_command_mode(mode, event),
-        _ => ()
+        _ => Action::None
     }
 }
 
-fn handle_normal_mode(mode: &mut Mode, event: InputEvent) {
+fn handle_normal_mode(mode: &mut Mode, event: InputEvent) -> Action {
     if let InputEvent::Key(key_event) = event {
         use crossterm::event::KeyCode::*;
         match key_event.code {
@@ -40,27 +40,36 @@ fn handle_normal_mode(mode: &mut Mode, event: InputEvent) {
                 *mode = Mode::Quit;
             }
             _ => {}
-        }
+        };
     }
+    Action::None
 }
 
-fn handle_insert_mode(mode: &mut Mode, event: InputEvent) {
+fn handle_insert_mode(mode: &mut Mode, event: InputEvent) -> Action {
     if let InputEvent::Key(key_event) = event {
         use crossterm::event::KeyCode::*;
         match key_event.code {
             Esc => {
                 *mode = Mode::Normal;
-                println!("Back to NORMAL mode");
+                Action::None
             }
             Char(c) => {
-                println!("Insert: typed '{}'", c);
+                Action::TextAction(TextActions::Insert(c))
             }
-            _ => {}
+            Enter => {
+                Action::TextAction(TextActions::NewLine)
+            }
+            Backspace => {
+                Action::TextAction(TextActions::Delete)
+            }
+            _ => Action::None
         }
+    } else {
+        Action::None
     }
 }
 
-fn handle_visual_mode(mode: &mut Mode, event: InputEvent) {
+fn handle_visual_mode(mode: &mut Mode, event: InputEvent) -> Action {
     if let InputEvent::Key(key_event) = event {
         use crossterm::event::KeyCode::*;
         match key_event.code {
@@ -69,11 +78,12 @@ fn handle_visual_mode(mode: &mut Mode, event: InputEvent) {
                 println!("Back to NORMAL mode");
             }
             _ => println!("Visual mode input: {:?}", key_event.code),
-        }
+        };
     }
+    Action::None
 }
 
-fn handle_command_mode(mode: &mut Mode, event: InputEvent) {
+fn handle_command_mode(mode: &mut Mode, event: InputEvent) -> Action {
     if let InputEvent::Key(key_event) = event {
         use crossterm::event::KeyCode::*;
         match key_event.code {
@@ -84,4 +94,5 @@ fn handle_command_mode(mode: &mut Mode, event: InputEvent) {
             _ => println!("Command mode input: {:?}", key_event.code),
         }
     }
+    Action::None
 }

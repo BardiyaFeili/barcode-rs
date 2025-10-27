@@ -4,7 +4,6 @@ use std::time::Duration;
 
 pub enum InputEvent {
     Key(KeyEvent),
-    Quit,
     None,
 }
 

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, error::Error};
+use std::error::Error;
 
 use crossterm::terminal;
 
@@ -10,15 +10,16 @@ pub enum WindowType {
 
 #[derive(Debug)]
 pub struct Window {
-    pub content: Vec<String>,    // lines inside the window
-    pub width: Option<u16>,    // None = flexible
-    pub height: Option<u16>,   // None = flexible
+    pub content: Vec<String>, // lines inside the window
+    pub width: Option<u16>,   // None = flexible
+    pub height: Option<u16>,  // None = flexible
     pub window_width: u16,
     pub window_height: u16,
     pub flexible_x: bool,        // true if width can expand
     pub flexible_y: bool,        // true if height can expand
     pub window_type: WindowType, // tile or floating
     pub position: Position,
+    pub hidden: bool
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -38,6 +39,7 @@ impl Window {
         flexible_y: bool,
         window_type: WindowType,
         position: Position,
+        hidden: bool
     ) -> Result<Self, Box<dyn Error>> {
         let (mut terminal_width, mut terminal_height) = terminal::size()?;
         if !flexible_x {
@@ -56,6 +58,7 @@ impl Window {
             flexible_y,
             window_type,
             position,
+            hidden
         })
     }
 }
