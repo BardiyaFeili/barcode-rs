@@ -7,15 +7,22 @@ use crossterm::{
 use std::{
     error::Error,
     io::{Write, stdout},
+    vec,
 };
 
 use crate::{
+    buffer::Buffer,
     input::read_input,
     modal::{Mode, handle_mode_input},
+    render::draw,
+    window::Window,
 };
 
+mod buffer;
 mod input;
 mod modal;
+mod render;
+mod window;
 
 fn main() -> Result<(), Box<dyn Error>> {
     enable_raw_mode()?;
@@ -24,6 +31,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     stdout.flush()?;
 
     let mut mode = Mode::Normal;
+    let mut active_windows: Vec<Window> = Vec::new();
 
     println!("Barcode editor ready. Press 'q' to quit.");
 
@@ -32,6 +40,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         if mode == Mode::Quit {
             break;
         }
+        render::render(&mut active_windows)?;
     }
 
     disable_raw_mode()?;
