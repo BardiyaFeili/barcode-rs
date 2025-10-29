@@ -1,10 +1,12 @@
 use std::error::Error;
 
 use crate::{
+    action::{Action, take_action},
     args::parse_args,
-    component::{Action, Component, ComponentType, handle_write_action},
+    component::{Component, ComponentType},
     file::open_file,
     input::read_input,
+    log::{log, log_startup},
     modal::{Mode, handle_mode_input},
     render,
 };
@@ -12,39 +14,37 @@ use crate::{
 pub fn run() -> Result<(), Box<dyn Error>> {
     let mut mode = Mode::Normal;
     let mut active_components: Vec<Component> = Vec::new();
-    let mut focused: Option<&mut Component> = None;
 
-    let last = startup(&mut active_components, &mut focused)?;
+    log_startup("Barcode", "pre-alpha")?;
+    let last = startup(&mut active_components)?;
 
     loop {
         for component in active_components.iter_mut() {
-            Component::update(component)
+            Component::update(component)?
         }
+
         let action = handle_mode_input(&mut mode, read_input()?);
+
+
         match action {
-            Action::TextAction(a) => handle_write_action(active_components.get_mut(last - 1), a)?,
-            _ => (),
+            Action::Quit => break,
+            _ => take_action(&action, last, &mut active_components)?,
         }
-        if mode == Mode::Quit {
-            break;
-        }
+
         render::render(&mut active_components)?;
     }
 
     Ok(())
 }
 
-fn startup(
-    active_components: &mut Vec<Component>,
-    focused: &mut Option<&mut Component>,
-) -> Result<usize, Box<dyn Error>> {
+fn startup(active_components: &mut Vec<Component>) -> Result<usize, Box<dyn Error>> {
     let args = parse_args();
 
     for file in &args.files {
         let content = open_file(file)?;
         let content = content.lines().map(|s| s.to_string()).collect();
         active_components.push(Component::new(content, ComponentType::Buffer));
-    };
+    }
 
     Ok(args.files.len())
 }

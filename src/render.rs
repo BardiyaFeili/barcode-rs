@@ -1,8 +1,16 @@
-use std::{error::Error, io::{stdout, Write}};
+use std::{
+    error::Error,
+    io::{Write, stdout},
+};
 
-use crossterm::{cursor, execute, terminal::{self, Clear, ClearType}};
+use crossterm::{
+    cursor, execute,
+    terminal::{self, Clear, ClearType},
+};
 
-use crate::{component::Component, window::{Position, WindowType}};
+use crate::{
+    component::Component, log::log, window::{Position, WindowType}
+};
 
 pub fn render(active_components: &mut Vec<Component>) -> Result<(), Box<dyn Error>> {
     let (width, height) = terminal::size()?;
@@ -21,7 +29,7 @@ pub fn render(active_components: &mut Vec<Component>) -> Result<(), Box<dyn Erro
     }
 
     let mut center_height = height;
-    for component in  top_components.iter().chain(bottom_components.iter()) {
+    for component in top_components.iter().chain(bottom_components.iter()) {
         center_height -= component.window.height.unwrap_or_else(|| 0);
     }
 
@@ -40,9 +48,9 @@ pub fn render(active_components: &mut Vec<Component>) -> Result<(), Box<dyn Erro
             component.window.window_width = center_flexible_window_width;
         }
     }
-    
+
     draw(center_components)?;
-    
+
     Ok(())
 }
 
@@ -56,8 +64,8 @@ pub fn draw(center_components: Vec<&mut Component>) -> Result<(), Box<dyn Error>
     )?;
 
     let mut min_x = 0;
-    for component in center_components{
-        for (y, line) in component.window.content.iter().enumerate(){
+    for component in center_components {
+        for (y, line) in component.window.content.iter().enumerate() {
             execute!(stdout, cursor::MoveTo(min_x, y as u16))?;
             writeln!(stdout, "{}", line)?;
         }

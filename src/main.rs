@@ -17,7 +17,9 @@ mod input;
 mod modal;
 mod render;
 mod run;
+mod log;
 mod window;
+mod action;
 
 fn main() -> Result<(), Box<dyn Error>> {
     enable_raw_mode()?;

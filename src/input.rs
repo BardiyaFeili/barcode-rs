@@ -1,6 +1,9 @@
-use crossterm::event::{self, Event, KeyCode, KeyEvent};
+use crossterm::event::{self, Event, KeyEvent};
+use std::error::Error;
 use std::io;
 use std::time::Duration;
+
+use crate::{action::CursorActions, component::Component, log::log};
 
 pub enum InputEvent {
     Key(KeyEvent),
@@ -10,12 +13,59 @@ pub enum InputEvent {
 pub fn read_input() -> io::Result<InputEvent> {
     if event::poll(Duration::from_millis(100))? {
         match event::read()? {
-            Event::Key(key) => {
-                Ok(InputEvent::Key(key))
-            }
+            Event::Key(key) => Ok(InputEvent::Key(key)),
             _ => Ok(InputEvent::None),
         }
     } else {
         Ok(InputEvent::None)
     }
+}
+
+pub struct Cursor {
+    pub x: u16,
+    pub y: u16,
+    pub hidden: bool,
+}
+
+impl Cursor {
+    pub fn new(x: u16, y: u16, hidden: bool) -> Cursor {
+        Cursor { x, y, hidden }
+    }
+    pub fn move_abs(&mut self, x: Option<u16>, y: Option<u16>) -> Result<(), Box<dyn Error>> {
+        if let Some(x) = x {
+            self.x = x
+        }
+        if let Some(y) = y {
+            self.y = y
+        }
+        Ok(())
+    }
+    pub fn move_rel(&mut self, x: Option<i16>, y: Option<i16>) -> Result<(), Box<dyn Error>> {
+        if let Some(x) = x {
+            let new = self.x as i16 + x;
+            self.x = new as u16
+        }
+        if let Some(y) = y {
+            let new = self.y as i16 + y;
+            self.y = new as u16
+        }
+        Ok(())
+    }
+}
+
+pub fn handle_cursor_action(
+    component: Option<&mut Component>,
+    action: &CursorActions,
+) -> Result<(), Box<dyn Error>> {
+    log("run handle_cursor_function")?;
+    let component = match component {
+        Some(c) => c,
+        None => return Ok(()),
+    };
+    match action {
+        CursorActions::MoveRel(x, y) => component.cursor.move_rel(Some(x.clone() as i16), Some(y.clone() as i16))?,
+        _ => {}
+    }
+
+    Ok(())
 }
