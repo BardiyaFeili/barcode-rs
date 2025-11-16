@@ -16,7 +16,7 @@ fn timestamp() -> String {
     format!("[{} | {}s]", tm, secs)
 }
 
-pub fn log(message: &str) -> Result<(), Box<dyn Error>> {
+pub fn log<S: AsRef<str>>(message: S) -> Result<(), Box<dyn Error>> {
     // open in append mode after initial clear
     let file = OpenOptions::new()
         .create(true)
@@ -24,11 +24,10 @@ pub fn log(message: &str) -> Result<(), Box<dyn Error>> {
         .open("log.txt")?;
     let mut writer = BufWriter::new(file);
 
-    writeln!(writer, "{} {}", timestamp(), message)?;
+    writeln!(writer, "{} {}", timestamp(), message.as_ref())?;
     writer.flush()?;
     Ok(())
 }
-
 pub fn log_startup(app_name: &str, version: &str) -> Result<(), Box<dyn Error>> {
     unsafe {
         if !LOG_CLEARED {

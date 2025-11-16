@@ -7,3 +7,4 @@ edition = "2024"
 crossterm = "0.29.0"
 clap = { version = "4.5.50", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde", "clock"] }
+colored = "3.0.0"

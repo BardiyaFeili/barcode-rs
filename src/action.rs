@@ -30,7 +30,7 @@ pub fn take_action(action: &Action, last: usize, active_components: &mut Vec<Com
         log(format!("{:?}", action).as_str())?;
     }
     match action {
-        Action::TextAction(a) => handle_write_action(active_components.get_mut(last - 1), a)?,
+        Action::TextAction(a) => handle_write_action(active_components.get_mut(last - 1), a, )?,
         Action::CursorAction(a) => {
             handle_cursor_action(active_components.get_mut(last - 1), a)?
         }

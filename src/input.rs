@@ -31,25 +31,32 @@ impl Cursor {
     pub fn new(x: u16, y: u16, hidden: bool) -> Cursor {
         Cursor { x, y, hidden }
     }
-    pub fn move_abs(&mut self, x: Option<u16>, y: Option<u16>) -> Result<(), Box<dyn Error>> {
-        if let Some(x) = x {
-            self.x = x
-        }
+    pub fn move_abs(&mut self, x: Option<u16>, y: Option<u16>, content: &Vec<String>) -> Result<(), Box<dyn Error>> {
         if let Some(y) = y {
-            self.y = y
+            self.y = y;
+        }
+        if let Some(x) = x {
+            if content[self.y as usize].len() <= x as usize {
+                self.x = content[self.y as usize].len() as u16 - 1;
+            } else {
+            self.x = x;
+            }
         }
         Ok(())
     }
-    pub fn move_rel(&mut self, x: Option<i16>, y: Option<i16>) -> Result<(), Box<dyn Error>> {
-        if let Some(x) = x {
-            let new = self.x as i16 + x;
-            self.x = new as u16
-        }
-        if let Some(y) = y {
-            let new = self.y as i16 + y;
-            self.y = new as u16
-        }
-        Ok(())
+
+    pub fn move_rel(&mut self, x: Option<i16>, y: Option<i16>, content: &Vec<String>) -> Result<(), Box<dyn Error>> {
+        let new_x = x.map(|dx| {
+            let v = self.x as i16 + dx;
+            v.max(0) as u16
+        });
+
+        let new_y = y.map(|dy| {
+            let v = self.y as i16 + dy;
+            v.max(0) as u16
+        });
+
+        self.move_abs(new_x, new_y, content)
     }
 }
 
@@ -63,7 +70,7 @@ pub fn handle_cursor_action(
         None => return Ok(()),
     };
     match action {
-        CursorActions::MoveRel(x, y) => component.cursor.move_rel(Some(x.clone() as i16), Some(y.clone() as i16))?,
+        CursorActions::MoveRel(x, y) => component.cursor.move_rel(Some(x.clone() as i16), Some(y.clone() as i16), &component.content)?,
         _ => {}
     }
 

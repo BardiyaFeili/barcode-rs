@@ -1,255 +1,90 @@
-[2025-10-28 19:44:51 | 1761695091s] --- APP STARTUP ---
-Barcode vpre-alpha started at 2025-10-28 19:44:51
+[2025-11-15 20:33:30 | 1763256810s] --- APP STARTUP ---
+Barcode vpre-alpha started at 2025-11-15 20:33:30
 
-[2025-10-28 19:44:51 | 1761695091s] None
-[2025-10-28 19:44:51 | 1761695091s] None
-[2025-10-28 19:44:51 | 1761695091s] None
-[2025-10-28 19:44:51 | 1761695091s] None
-[2025-10-28 19:44:51 | 1761695091s] None
-[2025-10-28 19:44:51 | 1761695091s] CursorAction(MoveRel(1, 0))
-[2025-10-28 19:44:51 | 1761695091s] run handle_cursor_function
-[2025-10-28 19:44:51 | 1761695091s] None
-[2025-10-28 19:44:51 | 1761695091s] CursorAction(MoveRel(1, 0))
-[2025-10-28 19:44:51 | 1761695091s] run handle_cursor_function
-[2025-10-28 19:44:51 | 1761695091s] None
-[2025-10-28 19:44:51 | 1761695091s] CursorAction(MoveRel(1, 0))
-[2025-10-28 19:44:51 | 1761695091s] run handle_cursor_function
-[2025-10-28 19:44:52 | 1761695092s] None
-[2025-10-28 19:44:52 | 1761695092s] CursorAction(MoveRel(1, 0))
-[2025-10-28 19:44:52 | 1761695092s] run handle_cursor_function
-[2025-10-28 19:44:52 | 1761695092s] None
-[2025-10-28 19:44:52 | 1761695092s] CursorAction(MoveRel(1, 0))
-[2025-10-28 19:44:52 | 1761695092s] run handle_cursor_function
-[2025-10-28 19:44:52 | 1761695092s] None
-[2025-10-28 19:44:52 | 1761695092s] None
-[2025-10-28 19:44:52 | 1761695092s] None
-[2025-10-28 19:44:52 | 1761695092s] None
-[2025-10-28 19:44:52 | 1761695092s] None
-[2025-10-28 19:44:52 | 1761695092s] None
-[2025-10-28 19:44:52 | 1761695092s] None
-[2025-10-28 19:44:53 | 1761695093s] None
-[2025-10-28 19:44:53 | 1761695093s] CursorAction(MoveRel(0, -1))
-[2025-10-28 19:44:53 | 1761695093s] run handle_cursor_function
-[2025-10-28 19:44:53 | 1761695093s] None
-[2025-10-28 19:44:53 | 1761695093s] None
-[2025-10-28 19:44:53 | 1761695093s] None
-[2025-10-28 19:44:53 | 1761695093s] None
-[2025-10-28 19:44:53 | 1761695093s] None
-[2025-10-28 19:44:53 | 1761695093s] None
-[2025-10-28 19:44:53 | 1761695093s] None
-[2025-10-28 19:44:53 | 1761695093s] None
-[2025-10-28 19:44:54 | 1761695094s] None
-[2025-10-28 19:44:54 | 1761695094s] None
-[2025-10-28 19:44:54 | 1761695094s] None
-[2025-10-28 19:44:54 | 1761695094s] None
-[2025-10-28 19:44:54 | 1761695094s] None
-[2025-10-28 19:44:54 | 1761695094s] None
-[2025-10-28 19:44:54 | 1761695094s] CursorAction(MoveRel(1, 0))
-[2025-10-28 19:44:54 | 1761695094s] run handle_cursor_function
-[2025-10-28 19:44:54 | 1761695094s] None
-[2025-10-28 19:44:54 | 1761695094s] None
-[2025-10-28 19:44:54 | 1761695094s] CursorAction(MoveRel(1, 0))
-[2025-10-28 19:44:54 | 1761695094s] run handle_cursor_function
-[2025-10-28 19:44:55 | 1761695095s] None
-[2025-10-28 19:44:55 | 1761695095s] CursorAction(MoveRel(1, 0))
-[2025-10-28 19:44:55 | 1761695095s] run handle_cursor_function
-[2025-10-28 19:44:55 | 1761695095s] None
-[2025-10-28 19:44:55 | 1761695095s] CursorAction(MoveRel(1, 0))
-[2025-10-28 19:44:55 | 1761695095s] run handle_cursor_function
-[2025-10-28 19:44:55 | 1761695095s] None
-[2025-10-28 19:44:55 | 1761695095s] None
-[2025-10-28 19:44:55 | 1761695095s] None
-[2025-10-28 19:44:55 | 1761695095s] None
-[2025-10-28 19:44:55 | 1761695095s] None
-[2025-10-28 19:44:55 | 1761695095s] CursorAction(MoveRel(0, 1))
-[2025-10-28 19:44:55 | 1761695095s] run handle_cursor_function
-[2025-10-28 19:44:55 | 1761695095s] None
-[2025-10-28 19:44:56 | 1761695096s] None
-[2025-10-28 19:44:56 | 1761695096s] CursorAction(MoveRel(0, -1))
-[2025-10-28 19:44:56 | 1761695096s] run handle_cursor_function
-[2025-10-28 19:44:56 | 1761695096s] None
-[2025-10-28 19:44:56 | 1761695096s] None
-[2025-10-28 19:44:56 | 1761695096s] CursorAction(MoveRel(0, 1))
-[2025-10-28 19:44:56 | 1761695096s] run handle_cursor_function
-[2025-10-28 19:44:56 | 1761695096s] None
-[2025-10-28 19:44:56 | 1761695096s] None
-[2025-10-28 19:44:56 | 1761695096s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:44:56 | 1761695096s] run handle_cursor_function
-[2025-10-28 19:44:56 | 1761695096s] None
-[2025-10-28 19:44:56 | 1761695096s] None
-[2025-10-28 19:44:56 | 1761695096s] None
-[2025-10-28 19:44:56 | 1761695096s] CursorAction(MoveRel(1, 0))
-[2025-10-28 19:44:56 | 1761695096s] run handle_cursor_function
-[2025-10-28 19:44:56 | 1761695096s] None
-[2025-10-28 19:44:57 | 1761695097s] None
-[2025-10-28 19:44:57 | 1761695097s] CursorAction(MoveRel(0, 1))
-[2025-10-28 19:44:57 | 1761695097s] run handle_cursor_function
-[2025-10-28 19:44:57 | 1761695097s] CursorAction(MoveRel(0, -1))
-[2025-10-28 19:44:57 | 1761695097s] run handle_cursor_function
-[2025-10-28 19:44:57 | 1761695097s] None
-[2025-10-28 19:44:57 | 1761695097s] None
-[2025-10-28 19:44:57 | 1761695097s] None
-[2025-10-28 19:44:57 | 1761695097s] None
-[2025-10-28 19:44:57 | 1761695097s] None
-[2025-10-28 19:44:57 | 1761695097s] None
-[2025-10-28 19:44:57 | 1761695097s] CursorAction(MoveRel(0, 1))
-[2025-10-28 19:44:57 | 1761695097s] run handle_cursor_function
-[2025-10-28 19:44:57 | 1761695097s] None
-[2025-10-28 19:44:57 | 1761695097s] None
-[2025-10-28 19:44:57 | 1761695097s] CursorAction(MoveRel(1, 0))
-[2025-10-28 19:44:57 | 1761695097s] run handle_cursor_function
-[2025-10-28 19:44:58 | 1761695098s] None
-[2025-10-28 19:44:58 | 1761695098s] None
-[2025-10-28 19:44:58 | 1761695098s] CursorAction(MoveRel(1, 0))
-[2025-10-28 19:44:58 | 1761695098s] run handle_cursor_function
-[2025-10-28 19:44:58 | 1761695098s] None
-[2025-10-28 19:44:58 | 1761695098s] CursorAction(MoveRel(1, 0))
-[2025-10-28 19:44:58 | 1761695098s] run handle_cursor_function
-[2025-10-28 19:44:58 | 1761695098s] None
-[2025-10-28 19:44:58 | 1761695098s] CursorAction(MoveRel(1, 0))
-[2025-10-28 19:44:58 | 1761695098s] run handle_cursor_function
-[2025-10-28 19:44:58 | 1761695098s] None
-[2025-10-28 19:44:58 | 1761695098s] None
-[2025-10-28 19:44:58 | 1761695098s] None
-[2025-10-28 19:44:59 | 1761695099s] None
-[2025-10-28 19:44:59 | 1761695099s] None
-[2025-10-28 19:44:59 | 1761695099s] None
-[2025-10-28 19:44:59 | 1761695099s] None
-[2025-10-28 19:44:59 | 1761695099s] None
-[2025-10-28 19:44:59 | 1761695099s] None
-[2025-10-28 19:44:59 | 1761695099s] None
-[2025-10-28 19:44:59 | 1761695099s] None
-[2025-10-28 19:44:59 | 1761695099s] None
-[2025-10-28 19:44:59 | 1761695099s] None
-[2025-10-28 19:45:00 | 1761695100s] CursorAction(MoveRel(0, 1))
-[2025-10-28 19:45:00 | 1761695100s] run handle_cursor_function
-[2025-10-28 19:45:00 | 1761695100s] None
-[2025-10-28 19:45:00 | 1761695100s] None
-[2025-10-28 19:45:00 | 1761695100s] None
-[2025-10-28 19:45:00 | 1761695100s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:00 | 1761695100s] run handle_cursor_function
-[2025-10-28 19:45:00 | 1761695100s] None
-[2025-10-28 19:45:00 | 1761695100s] None
-[2025-10-28 19:45:00 | 1761695100s] None
-[2025-10-28 19:45:00 | 1761695100s] None
-[2025-10-28 19:45:00 | 1761695100s] None
-[2025-10-28 19:45:00 | 1761695100s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:00 | 1761695100s] run handle_cursor_function
-[2025-10-28 19:45:00 | 1761695100s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:00 | 1761695100s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] None
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] None
-[2025-10-28 19:45:01 | 1761695101s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:01 | 1761695101s] run handle_cursor_function
-[2025-10-28 19:45:01 | 1761695101s] None
-[2025-10-28 19:45:02 | 1761695102s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:02 | 1761695102s] run handle_cursor_function
-[2025-10-28 19:45:02 | 1761695102s] None
-[2025-10-28 19:45:02 | 1761695102s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:02 | 1761695102s] run handle_cursor_function
-[2025-10-28 19:45:02 | 1761695102s] None
-[2025-10-28 19:45:02 | 1761695102s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:02 | 1761695102s] run handle_cursor_function
-[2025-10-28 19:45:02 | 1761695102s] None
-[2025-10-28 19:45:02 | 1761695102s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:02 | 1761695102s] run handle_cursor_function
-[2025-10-28 19:45:02 | 1761695102s] None
-[2025-10-28 19:45:02 | 1761695102s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:02 | 1761695102s] run handle_cursor_function
-[2025-10-28 19:45:02 | 1761695102s] None
-[2025-10-28 19:45:02 | 1761695102s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:02 | 1761695102s] run handle_cursor_function
-[2025-10-28 19:45:02 | 1761695102s] None
-[2025-10-28 19:45:02 | 1761695102s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:02 | 1761695102s] run handle_cursor_function
-[2025-10-28 19:45:02 | 1761695102s] None
-[2025-10-28 19:45:03 | 1761695103s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:03 | 1761695103s] run handle_cursor_function
-[2025-10-28 19:45:03 | 1761695103s] None
-[2025-10-28 19:45:03 | 1761695103s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:03 | 1761695103s] run handle_cursor_function
-[2025-10-28 19:45:03 | 1761695103s] None
-[2025-10-28 19:45:03 | 1761695103s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:03 | 1761695103s] run handle_cursor_function
-[2025-10-28 19:45:03 | 1761695103s] None
-[2025-10-28 19:45:03 | 1761695103s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:03 | 1761695103s] run handle_cursor_function
-[2025-10-28 19:45:03 | 1761695103s] None
-[2025-10-28 19:45:03 | 1761695103s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:03 | 1761695103s] run handle_cursor_function
-[2025-10-28 19:45:03 | 1761695103s] None
-[2025-10-28 19:45:03 | 1761695103s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:03 | 1761695103s] run handle_cursor_function
-[2025-10-28 19:45:03 | 1761695103s] None
-[2025-10-28 19:45:03 | 1761695103s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:03 | 1761695103s] run handle_cursor_function
-[2025-10-28 19:45:03 | 1761695103s] None
-[2025-10-28 19:45:04 | 1761695104s] CursorAction(MoveRel(-1, 0))
-[2025-10-28 19:45:04 | 1761695104s] run handle_cursor_function
-[2025-10-28 19:45:04 | 1761695104s] None
-[2025-10-28 19:45:04 | 1761695104s] None
-[2025-10-28 19:45:04 | 1761695104s] None
-[2025-10-28 19:45:04 | 1761695104s] None
-[2025-10-28 19:45:04 | 1761695104s] None
-[2025-10-28 19:45:04 | 1761695104s] None
-[2025-10-28 19:45:04 | 1761695104s] CursorAction(MoveRel(0, -1))
-[2025-10-28 19:45:04 | 1761695104s] run handle_cursor_function
-[2025-10-28 19:45:04 | 1761695104s] None
-[2025-10-28 19:45:04 | 1761695104s] None
-[2025-10-28 19:45:04 | 1761695104s] CursorAction(MoveRel(1, 0))
-[2025-10-28 19:45:04 | 1761695104s] run handle_cursor_function
-[2025-10-28 19:45:05 | 1761695105s] None
-[2025-10-28 19:45:05 | 1761695105s] None
-[2025-10-28 19:45:05 | 1761695105s] None
-[2025-10-28 19:45:05 | 1761695105s] CursorAction(MoveRel(0, 1))
-[2025-10-28 19:45:05 | 1761695105s] run handle_cursor_function
-[2025-10-28 19:45:05 | 1761695105s] None
-[2025-10-28 19:45:05 | 1761695105s] None
-[2025-10-28 19:45:05 | 1761695105s] None
-[2025-10-28 19:45:05 | 1761695105s] CursorAction(MoveRel(0, -1))
-[2025-10-28 19:45:05 | 1761695105s] run handle_cursor_function
-[2025-10-28 19:45:05 | 1761695105s] None
-[2025-10-28 19:45:05 | 1761695105s] None
-[2025-10-28 19:45:05 | 1761695105s] CursorAction(MoveRel(1, 0))
-[2025-10-28 19:45:05 | 1761695105s] run handle_cursor_function
-[2025-10-28 19:45:05 | 1761695105s] None
-[2025-10-28 19:45:06 | 1761695106s] None
-[2025-10-28 19:45:06 | 1761695106s] Quit
+[2025-11-15 20:33:30 | 1763256810s] Starting the process of finding paths
+[2025-11-15 20:33:30 | 1763256810s] No argument given using --config-home
+[2025-11-15 20:33:30 | 1763256810s] BARCODE_CONFIG_DIR is not set.
+[2025-11-15 20:33:30 | 1763256810s] XDG_CONFIG_HOME is not set.
+[2025-11-15 20:33:30 | 1763256810s] Path given using ~/.config/barcode doesn't exist
+[2025-11-15 20:33:30 | 1763256810s] {}
+[2025-11-15 20:33:30 | 1763256810s] CursorAction(MoveRel(0, 1))
+[2025-11-15 20:33:30 | 1763256810s] run handle_cursor_function
+[2025-11-15 20:33:31 | 1763256811s] CursorAction(MoveRel(1, 0))
+[2025-11-15 20:33:31 | 1763256811s] run handle_cursor_function
+[2025-11-15 20:33:32 | 1763256812s] TextAction(Insert('h'))
+[2025-11-15 20:33:36 | 1763256816s] TextAction(Insert('h'))
+[2025-11-15 20:33:36 | 1763256816s] TextAction(Insert('h'))
+[2025-11-15 20:33:37 | 1763256817s] TextAction(Insert('h'))
+[2025-11-15 20:33:43 | 1763256823s] TextAction(Insert('h'))
+[2025-11-15 20:33:43 | 1763256823s] TextAction(Insert('h'))
+[2025-11-15 20:33:43 | 1763256823s] TextAction(Insert('h'))
+[2025-11-15 20:33:44 | 1763256824s] TextAction(Insert('h'))
+[2025-11-15 20:33:44 | 1763256824s] TextAction(Insert('h'))
+[2025-11-15 20:33:44 | 1763256824s] TextAction(Insert('h'))
+[2025-11-15 20:33:44 | 1763256824s] TextAction(Insert('h'))
+[2025-11-15 20:33:44 | 1763256824s] TextAction(Insert('h'))
+[2025-11-15 20:33:45 | 1763256825s] TextAction(Insert('h'))
+[2025-11-15 20:33:45 | 1763256825s] TextAction(Insert('h'))
+[2025-11-15 20:33:45 | 1763256825s] TextAction(Insert('h'))
+[2025-11-15 20:33:45 | 1763256825s] TextAction(Insert('h'))
+[2025-11-15 20:33:45 | 1763256825s] TextAction(Insert('h'))
+[2025-11-15 20:33:45 | 1763256825s] TextAction(Insert('h'))
+[2025-11-15 20:33:46 | 1763256826s] TextAction(Insert('h'))
+[2025-11-15 20:33:46 | 1763256826s] TextAction(Insert('h'))
+[2025-11-15 20:33:47 | 1763256827s] TextAction(Insert('h'))
+[2025-11-15 20:33:47 | 1763256827s] TextAction(Insert('h'))
+[2025-11-15 20:33:47 | 1763256827s] TextAction(Insert('h'))
+[2025-11-15 20:33:48 | 1763256828s] TextAction(Insert('h'))
+[2025-11-15 20:33:48 | 1763256828s] TextAction(Insert('h'))
+[2025-11-15 20:33:48 | 1763256828s] TextAction(Insert('h'))
+[2025-11-15 20:33:49 | 1763256829s] TextAction(Insert('h'))
+[2025-11-15 20:33:49 | 1763256829s] TextAction(Insert('h'))
+[2025-11-15 20:33:49 | 1763256829s] TextAction(Insert('h'))
+[2025-11-15 20:33:50 | 1763256830s] TextAction(Insert('h'))
+[2025-11-15 20:33:50 | 1763256830s] TextAction(Insert('h'))
+[2025-11-15 20:33:50 | 1763256830s] TextAction(Insert('h'))
+[2025-11-15 20:33:50 | 1763256830s] TextAction(Insert('h'))
+[2025-11-15 20:33:51 | 1763256831s] TextAction(Insert('h'))
+[2025-11-15 20:33:51 | 1763256831s] TextAction(Insert('h'))
+[2025-11-15 20:33:51 | 1763256831s] TextAction(Insert('h'))
+[2025-11-15 20:33:51 | 1763256831s] TextAction(Insert('h'))
+[2025-11-15 20:33:52 | 1763256832s] TextAction(Insert('h'))
+[2025-11-15 20:33:52 | 1763256832s] TextAction(Insert('h'))
+[2025-11-15 20:33:55 | 1763256835s] TextAction(Insert('h'))
+[2025-11-15 20:33:55 | 1763256835s] TextAction(Insert('h'))
+[2025-11-15 20:33:55 | 1763256835s] TextAction(Insert('h'))
+[2025-11-15 20:33:55 | 1763256835s] TextAction(Insert('h'))
+[2025-11-15 20:33:56 | 1763256836s] TextAction(Insert('h'))
+[2025-11-15 20:33:56 | 1763256836s] TextAction(Insert('h'))
+[2025-11-15 20:33:56 | 1763256836s] TextAction(Insert('h'))
+[2025-11-15 20:33:56 | 1763256836s] TextAction(Insert('h'))
+[2025-11-15 20:33:56 | 1763256836s] TextAction(Insert('h'))
+[2025-11-15 20:33:56 | 1763256836s] TextAction(Insert('h'))
+[2025-11-15 20:33:57 | 1763256837s] TextAction(Insert('h'))
+[2025-11-15 20:33:57 | 1763256837s] TextAction(Insert('h'))
+[2025-11-15 20:33:57 | 1763256837s] TextAction(Insert('h'))
+[2025-11-15 20:33:57 | 1763256837s] TextAction(Insert('h'))
+[2025-11-15 20:33:57 | 1763256837s] TextAction(Insert('h'))
+[2025-11-15 20:33:57 | 1763256837s] TextAction(Insert('h'))
+[2025-11-15 20:33:58 | 1763256838s] TextAction(Insert('h'))
+[2025-11-15 20:33:58 | 1763256838s] TextAction(Insert('h'))
+[2025-11-15 20:33:58 | 1763256838s] TextAction(Insert('h'))
+[2025-11-15 20:33:58 | 1763256838s] TextAction(Insert('h'))
+[2025-11-15 20:33:58 | 1763256838s] TextAction(Insert('h'))
+[2025-11-15 20:33:58 | 1763256838s] TextAction(Insert('h'))
+[2025-11-15 20:33:59 | 1763256839s] TextAction(Insert('h'))
+[2025-11-15 20:33:59 | 1763256839s] TextAction(Insert('h'))
+[2025-11-15 20:33:59 | 1763256839s] TextAction(Insert('h'))
+[2025-11-15 20:33:59 | 1763256839s] TextAction(Insert('h'))
+[2025-11-15 20:33:59 | 1763256839s] TextAction(Insert('h'))
+[2025-11-15 20:33:59 | 1763256839s] TextAction(Insert('h'))
+[2025-11-15 20:34:00 | 1763256840s] TextAction(Insert('h'))
+[2025-11-15 20:34:00 | 1763256840s] TextAction(Insert('h'))
+[2025-11-15 20:34:00 | 1763256840s] TextAction(Insert('h'))
+[2025-11-15 20:34:00 | 1763256840s] TextAction(Insert('h'))
+[2025-11-15 20:34:00 | 1763256840s] TextAction(Insert('h'))
+[2025-11-15 20:34:01 | 1763256841s] TextAction(Insert('h'))
+[2025-11-15 20:34:01 | 1763256841s] TextAction(Insert('h'))
+[2025-11-15 20:34:01 | 1763256841s] TextAction(Insert('h'))
+[2025-11-15 20:34:01 | 1763256841s] TextAction(Insert('h'))
+[2025-11-15 20:34:01 | 1763256841s] TextAction(Insert('h'))

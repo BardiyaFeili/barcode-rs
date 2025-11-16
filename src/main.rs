@@ -10,16 +10,17 @@ use std::{
     io::{Write, stdout},
 };
 
+mod action;
 mod args;
 mod component;
+mod config;
 mod file;
 mod input;
+mod log;
 mod modal;
 mod render;
 mod run;
-mod log;
 mod window;
-mod action;
 
 fn main() -> Result<(), Box<dyn Error>> {
     enable_raw_mode()?;

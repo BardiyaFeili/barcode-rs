@@ -1,16 +1,11 @@
-use std::{
-    error::Error,
-    io::{Write, stdout},
-};
+use std::error::Error;
 
-use crossterm::{
-    ExecutableCommand, cursor,
-    style::{Color, Print, ResetColor, SetBackgroundColor, SetForegroundColor},
-    terminal,
-};
+use crossterm::{cursor, style::Stylize};
 
 use crate::{
-    action::TextActions, input::Cursor, window::{Position, Window, WindowType}
+    action::TextActions,
+    input::Cursor,
+    window::{Position, Window, WindowType},
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -19,7 +14,7 @@ pub enum ComponentType {
 }
 
 pub struct Component {
-    content: Vec<String>,
+    pub content: Vec<String>,
     component_type: ComponentType,
     editable: bool,
     pub cursor: Cursor,
@@ -49,42 +44,31 @@ impl Component {
     pub fn update(&mut self) -> Result<(), Box<dyn Error>> {
         let mut render_content = self.content.clone();
         if !self.cursor.hidden {
-            Component::render_cursor(render_content, &self.cursor)?;
+            self.window.content = Component::render_cursor(render_content, &self.cursor);
         }
         Ok(())
     }
-    pub fn render_cursor(content: Vec<String>, text_cursor: &Cursor) -> Result<(), Box<dyn Error>> {
-        let mut stdout = stdout();
-
-        // Clear screen and move cursor to top-left
-        stdout.execute(terminal::Clear(terminal::ClearType::All))?;
-        stdout.execute(cursor::MoveTo(0, 0))?;
+    pub fn render_cursor(content: Vec<String>, text_cursor: &Cursor) -> Vec<String> {
+        let mut built_content: Vec<String> = Vec::new();
 
         for (y, line) in content.iter().enumerate() {
-            for (x, ch) in line.chars().enumerate() {
-                if text_cursor.y as usize == y && text_cursor.x as usize == x {
-                    stdout.execute(SetBackgroundColor(Color::White))?;
-                    stdout.execute(SetForegroundColor(Color::Black))?;
-                    stdout.execute(Print(ch))?;
-                    stdout.execute(ResetColor)?;
-                } else {
-                    stdout.execute(Print(ch))?;
+            if y == text_cursor.y as usize {
+                let mut built_line: String = String::new();
+                for (x, char) in line.chars().enumerate() {
+                    if x == text_cursor.x as usize {
+                        let colored_char = char.to_string().on_white().black().to_string();
+                        built_line.push_str(colored_char.as_str());
+                    } else {
+                        built_line.push(char)
+                    }
                 }
+                built_content.push(built_line.clone());
+            } else {
+                built_content.push(line.clone());
             }
-
-            // Cursor at end of line (after last char)
-            if text_cursor.y as usize == y && text_cursor.y as usize == line.len() {
-                stdout.execute(SetBackgroundColor(Color::White))?;
-                stdout.execute(SetForegroundColor(Color::Black))?;
-                stdout.execute(Print(" "))?;
-                stdout.execute(ResetColor)?;
-            }
-
-            stdout.execute(Print("\n"))?;
         }
 
-        stdout.flush()?;
-        Ok(())
+        built_content
     }
 }
 
@@ -92,14 +76,17 @@ pub fn handle_write_action(
     buffer: Option<&mut Component>,
     action: &TextActions,
 ) -> Result<(), Box<dyn Error>> {
-    let content = match buffer {
+    let component = match buffer {
         Some(c) => c,
         None => return Ok(()),
     };
     match action {
         TextActions::NewLine => {}
         TextActions::Delete => {}
-        TextActions::Insert(c) => {}
+        TextActions::Insert(c) => {
+            component.content[component.cursor.y as usize].insert(component.cursor.x as usize, c.clone());
+            component.cursor.move_rel(Some(1), None, &component.content)?;
+        }
     }
     Ok(())
 }
