@@ -3,9 +3,7 @@ use std::error::Error;
 use crossterm::{cursor, style::Stylize};
 
 use crate::{
-    action::TextActions,
-    input::Cursor,
-    window::{Position, Window, WindowType},
+    action::TextActions, component, input::Cursor, window::{Position, Window, WindowType}
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -68,6 +66,13 @@ impl Component {
             }
         }
 
+        built_content
+    }
+    fn render_number_line(content: Vec<String>, text_curosr: &Cursor) -> Vec<String> {
+        let mut built_content: Vec<String> = Vec::new();
+        
+        
+        
         built_content
     }
 }
