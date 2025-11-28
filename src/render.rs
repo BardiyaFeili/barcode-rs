@@ -13,7 +13,7 @@ use crate::{
 };
 
 pub fn render(active_components: &mut Vec<Component>) -> Result<(), Box<dyn Error>> {
-    let (width, height) = terminal::size()?;
+    let (terminal_width, terminal_height) = terminal::size()?;
 
     let (mut top_components, mut center_components, mut bottom_components) =
         (Vec::new(), Vec::new(), Vec::new());
@@ -28,12 +28,12 @@ pub fn render(active_components: &mut Vec<Component>) -> Result<(), Box<dyn Erro
         }
     }
 
-    let mut center_height = height;
+    let mut center_height = terminal_height;
     for component in top_components.iter().chain(bottom_components.iter()) {
         center_height -= component.window.height.unwrap_or_else(|| 0);
     }
 
-    let mut center_flexible_width = width;
+    let mut center_flexible_width = terminal_width;
     for component in &center_components {
         if !component.window.flexible_x {
             center_flexible_width -= component.window.width.unwrap_or_else(|| 0);
