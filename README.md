@@ -1,27 +1,44 @@
-# Barcode, a TUI Code Editor
+# Barcode — a TUI Code Editor
 
-Barcode is a simeple, modal, terminal code editor written in Rust.
+Barcode is a simple, modal terminal code editor written in Rust.
+
+This project is still very much a work in progress.
 
 ## Features
 
-- Fast
+- Modal editing (Vim-inspired)
 - Multiple tabs
-- Easy to extend
-- Cross-platfrom
-- Modal, like Vim
+- Fast and lightweight
+- Cross-platform
+- Built with extensibility in mind
 
-## How to build
+## Why it’s minimal right now
 
-First clone the repo, then navigate to the directory in the terminal.
+Many features you would normally expect from an editor (syntax highlighting, plugins, LSP, etc.) are intentionally not implemented yet.
 
-```bash
-# To build
-cargo build --release
+So far, the focus has been on:
 
-# To run
-Cargo run --release
-```
+- Getting the core architecture right
+- Keeping the codebase simple and modular
+- Making future features easy to add and fast to implement
 
-## How to use
+This should allow new functionality to be added later with minimal refactoring.
 
-You can enter Insert mode by pressing `i`. 
+## Building and running
+
+Clone the repository and run:
+
+    cargo build --release
+    cargo run --release
+
+## Usage
+
+- Press `i` to enter Insert mode
+- Other commands and modes are still under development
+
+## Planned features
+
+- Syntax highlighting
+- Plugin system
+- LSP support
+- Configurable keybindings
