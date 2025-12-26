@@ -91,7 +91,7 @@ impl Component {
 
         built_content
     }
-    fn render_number_line(content: Vec<String>, text_curosr: &Cursor) -> Vec<String> {
+    fn render_number_line(content: Vec<String>, text_curosr: &Cursor, viewpoint: usize) -> Vec<String> {
         let mut built_content: Vec<String> = Vec::new();
 
         for (line_number, line) in content.iter().enumerate() {}
