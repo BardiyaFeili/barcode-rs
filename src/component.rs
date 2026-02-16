@@ -1,12 +1,11 @@
 use std::error::Error;
 
-use crossterm::{cursor, style::Stylize};
+use crossterm::style::Stylize;
 
 use crate::{
     action::TextActions,
-    component,
     input::Cursor,
-    window::{self, Position, Window, WindowType},
+    window::{Position, Window, WindowType},
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -44,32 +43,29 @@ impl Component {
         }
     }
     pub fn update(&mut self) -> Result<(), Box<dyn Error>> {
-        let mut render_content = self.content.clone();
-        render_content = Component::ready_content(
-            render_content,
+        let mut render_content = Component::ready_content(
+            self.content.clone(),
             self.window.viewpoint,
             self.window.window_height,
         );
         if !self.cursor.hidden {
-            self.window.content = Component::render_cursor(render_content, &self.cursor);
+            render_content = Component::render_cursor(&mut render_content, &self.cursor);
         }
+
+        self.window.content = render_content;
         Ok(())
     }
     fn ready_content(content: Vec<String>, viewpoint: usize, window_height: u16) -> Vec<String> {
-        let mut built_content: Vec<String> = Vec::new();
-
         let render_height = (content.len() - viewpoint).min(window_height as usize);
 
-        let built_content: Vec<String> = content
+        content
             .iter()
             .skip(viewpoint)
             .take(render_height)
             .cloned()
-            .collect();
-
-        built_content
+            .collect()
     }
-    pub fn render_cursor(content: Vec<String>, text_cursor: &Cursor) -> Vec<String> {
+    pub fn render_cursor(content: &mut [String], text_cursor: &Cursor) -> Vec<String> {
         let mut built_content: Vec<String> = Vec::new();
 
         for (y, line) in content.iter().enumerate() {
@@ -91,13 +87,17 @@ impl Component {
 
         built_content
     }
-    fn render_number_line(content: Vec<String>, text_curosr: &Cursor, viewpoint: usize) -> Vec<String> {
-        let mut built_content: Vec<String> = Vec::new();
-
-        for (line_number, line) in content.iter().enumerate() {}
-
-        built_content
-    }
+    // fn render_number_line(
+    //     content: Vec<String>,
+    //     text_curosr: &Cursor,
+    //     viewpoint: usize,
+    // ) -> Vec<String> {
+    //     let mut built_content: Vec<String> = Vec::new();
+    //
+    //     for (line_number, line) in content.iter().enumerate() {}
+    //
+    //     built_content
+    // }
 }
 
 pub fn handle_write_action(
@@ -112,8 +112,7 @@ pub fn handle_write_action(
         TextActions::NewLine => {}
         TextActions::Delete => {}
         TextActions::Insert(c) => {
-            component.content[component.cursor.y as usize]
-                .insert(component.cursor.x as usize, c.clone());
+            component.content[component.cursor.y as usize].insert(component.cursor.x as usize, *c);
             component
                 .cursor
                 .move_rel(Some(1), None, &component.content)?;

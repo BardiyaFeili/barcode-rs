@@ -1,8 +1,8 @@
-use std::fs::{OpenOptions, File};
-use std::io::{Write, BufWriter};
-use std::time::{SystemTime, UNIX_EPOCH};
-use std::error::Error;
 use chrono::Local;
+use std::error::Error;
+use std::fs::{File, OpenOptions};
+use std::io::{BufWriter, Write};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 // keeps track of whether we've already cleared the log this run
 static mut LOG_CLEARED: bool = false;
@@ -45,6 +45,7 @@ pub fn log_startup(app_name: &str, version: &str) -> Result<(), Box<dyn Error>> 
     );
 
     println!("{}", info);
-    log(&format!("--- APP STARTUP ---\n{}", info))?;
+    log(format!("--- APP STARTUP ---\n{}", info))?;
     Ok(())
 }
+

@@ -18,7 +18,6 @@ pub fn handle_mode_input(mode: &mut Mode, event: InputEvent) -> Action {
         Mode::Insert => handle_insert_mode(event),
         Mode::Visual => handle_visual_mode(event),
         Mode::Command => handle_command_mode(event),
-        _ => Action::None,
     }
 }
 

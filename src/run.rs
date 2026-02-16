@@ -1,16 +1,23 @@
 use std::error::Error;
 
 use crate::{
-    action::{Action, take_action}, args::{Args, parse_args}, component::{Component, ComponentType}, config::resolve_config_files, file::open_file, input::read_input, log::log_startup, modal::{Mode, handle_mode_input}, render::render
+    action::{Action, take_action},
+    args::Args,
+    component::{Component, ComponentType},
+    config::resolve_config_files,
+    file::open_file,
+    input::read_input,
+    log::log_startup,
+    modal::{Mode, handle_mode_input},
+    render::render,
 };
 
-pub fn run() -> Result<(), Box<dyn Error>> {
+pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
     let mut mode = Mode::Normal;
     let mut active_components: Vec<Component> = Vec::new();
-    let args = parse_args();
 
     let last = startup(&args, &mut active_components)?;
-    if args.only_startup{
+    if args.only_startup {
         return Ok(());
     }
 
@@ -40,8 +47,8 @@ fn startup(args: &Args, active_components: &mut Vec<Component>) -> Result<usize,
         let content = content.lines().map(|s| s.to_string()).collect();
         active_components.push(Component::new(content, ComponentType::Buffer));
     }
-    
-    resolve_config_files(&args)?;
+
+    resolve_config_files(args)?;
 
     Ok(args.files.len())
 }

@@ -1,4 +1,4 @@
-use crate::run::run;
+use crate::{args::parse_args, run::run};
 use crossterm::{
     cursor,
     event::{DisableMouseCapture, EnableMouseCapture},
@@ -23,12 +23,14 @@ mod run;
 mod window;
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let args = parse_args();
+
     enable_raw_mode()?;
     let mut stdout = stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
     stdout.flush()?;
 
-    run()?;
+    run(args)?;
 
     disable_raw_mode()?;
     execute!(
