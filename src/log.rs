@@ -44,7 +44,6 @@ pub fn log_startup(app_name: &str, version: &str) -> Result<(), Box<dyn Error>> 
         Local::now().format("%Y-%m-%d %H:%M:%S")
     );
 
-    println!("{}", info);
     log(format!("--- APP STARTUP ---\n{}", info))?;
     Ok(())
 }

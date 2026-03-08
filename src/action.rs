@@ -1,18 +1,23 @@
 use std::error::Error;
 
 use crate::{
-    component::{Component, handle_write_action},
+    command::handle_command,
+    component::{Component, ComponentType},
+    config::Config,
     input::handle_cursor_action,
     log::log,
     modal::Mode,
+    window::{WindowType},
 };
 
 #[derive(Debug, PartialEq)]
 pub enum Action {
-    TextAction(TextActions),
-    CursorAction(CursorActions),
-    WindowAction,
+    Text(TextActions),
+    Cursor(CursorActions),
+    Window(WindowActions),
     Mode(Mode),
+    Command(String),
+    ExecuteCommand(String),
     Quit,
     None,
 }
@@ -26,22 +31,128 @@ pub enum TextActions {
 
 #[derive(Debug, PartialEq)]
 pub enum CursorActions {
+    #[allow(dead_code)]
     MoveAbs(u16, u16),
     MoveRel(i16, i16),
 }
 
+#[derive(Debug, PartialEq)]
+pub enum WindowActions {
+    Next,
+    Previous,
+    Focus(usize),
+}
+
 pub fn take_action(
     action: &Action,
-    last: usize,
+    focused_idx: &mut usize,
     active_components: &mut Vec<Component>,
+    mode: &Mode,
+    old_mode: Mode,
+    config: &Config,
 ) -> Result<(), Box<dyn Error>> {
     if action != &Action::None {
-        log(format!("{:?}", action).as_str())?;
+        match action {
+            Action::Cursor(_) | Action::Text(_) => {}, // Too noisy
+            _ => log(format!("Action: {:?}", action))?,
+        }
     }
+
+    // UI management based on mode transitions
+    if *mode == Mode::Command && old_mode != Mode::Command {
+        // Entering command mode: create input component
+        let mut input_comp = Component::new(vec![String::new()], ComponentType::Input, None);
+        let cfg = &config.input;
+        input_comp.window.window_type = WindowType::Floating;
+        input_comp.window.h_anchor = cfg.h_anchor;
+        input_comp.window.v_anchor = cfg.v_anchor;
+        input_comp.window.x = cfg.x;
+        input_comp.window.y = cfg.y;
+        input_comp.window.window_width = cfg.width;
+        input_comp.window.window_height = cfg.height;
+        input_comp.window.border_style = cfg.border_style;
+        input_comp.window.colors.border_fg = crossterm::style::Color::Yellow;
+        active_components.push(input_comp);
+        *focused_idx = active_components.len() - 1;
+    } else if *mode != Mode::Command && old_mode == Mode::Command {
+        // Leaving command mode: remove input component
+        remove_input_component(active_components, focused_idx);
+    }
+
     match action {
-        Action::TextAction(a) => handle_write_action(active_components.get_mut(last - 1), a)?,
-        Action::CursorAction(a) => handle_cursor_action(active_components.get_mut(last - 1), a)?,
+        Action::Text(a) => {
+            if let Some(component) = active_components.get_mut(*focused_idx) {
+                crate::component::handle_write_action(Some(component), a, mode)?;
+            }
+        }
+        Action::Cursor(a) => {
+            if let Some(component) = active_components.get_mut(*focused_idx) {
+                handle_cursor_action(Some(component), a, mode)?;
+            }
+        }
+        Action::Mode(new_mode) => {
+            if let Some(component) = active_components.get_mut(*focused_idx) {
+                component.cursor.move_abs(None, None, &component.content, new_mode)?;
+            }
+        }
+        Action::Command(cmd) => {
+            if let Some(input_comp) = active_components.iter_mut().find(|c| c.component_type == ComponentType::Input) {
+                input_comp.content[0] = cmd.clone();
+                input_comp.cursor.x = cmd.len() as u16;
+            }
+        }
+        Action::ExecuteCommand(cmd) => {
+            remove_input_component(active_components, focused_idx);
+            handle_command(cmd, active_components, focused_idx, config)?;
+        }
+        Action::Window(a) => match a {
+            WindowActions::Next => {
+                if !active_components.is_empty() {
+                    let mut next = (*focused_idx + 1) % active_components.len();
+                    let start = next;
+                    while !active_components[next].focusable {
+                        next = (next + 1) % active_components.len();
+                        if next == start { break; }
+                    }
+                    *focused_idx = next;
+                }
+            }
+            WindowActions::Previous => {
+                if !active_components.is_empty() {
+                    let mut prev = if *focused_idx == 0 { active_components.len() - 1 } else { *focused_idx - 1 };
+                    let start = prev;
+                    while !active_components[prev].focusable {
+                        prev = if prev == 0 { active_components.len() - 1 } else { prev - 1 };
+                        if prev == start { break; }
+                    }
+                    *focused_idx = prev;
+                }
+            }
+            WindowActions::Focus(idx) => {
+                if *idx < active_components.len() && active_components[*idx].focusable {
+                    *focused_idx = *idx;
+                }
+            }
+        },
         _ => (),
     }
     Ok(())
+}
+
+fn remove_input_component(active_components: &mut Vec<Component>, focused_idx: &mut usize) {
+    if let Some(pos) = active_components.iter().position(|c| c.component_type == ComponentType::Input) {
+        active_components.remove(pos);
+        if *focused_idx >= active_components.len() && !active_components.is_empty() {
+            *focused_idx = active_components.len() - 1;
+        } else if active_components.is_empty() {
+            *focused_idx = 0;
+        }
+        
+        // Ensure focused index is focusable
+        if !active_components.is_empty() {
+            while !active_components[*focused_idx].focusable && *focused_idx > 0 {
+                *focused_idx -= 1;
+            }
+        }
+    }
 }

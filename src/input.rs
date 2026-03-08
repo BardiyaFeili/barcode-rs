@@ -3,7 +3,7 @@ use std::error::Error;
 use std::io;
 use std::time::Duration;
 
-use crate::{action::CursorActions, component::Component, log::log};
+use crate::{action::CursorActions, component::Component, modal::Mode};
 
 pub enum InputEvent {
     Key(KeyEvent),
@@ -24,6 +24,7 @@ pub fn read_input() -> io::Result<InputEvent> {
 pub struct Cursor {
     pub x: u16,
     pub y: u16,
+    #[allow(dead_code)]
     pub hidden: bool,
 }
 
@@ -35,14 +36,26 @@ impl Cursor {
         &mut self,
         x: Option<u16>,
         y: Option<u16>,
-        content: &Vec<String>,
+        content: &[String],
+        mode: &Mode,
     ) -> Result<(), Box<dyn Error>> {
         if let Some(y) = y {
-            self.y = y;
+            let max_y = (content.len().saturating_sub(1)) as u16;
+            if y > max_y {
+                self.y = max_y;
+            } else {
+                self.y = y;
+            }
         }
         if let Some(x) = x {
-            if content[self.y as usize].len() <= x as usize {
-                self.x = content[self.y as usize].len() as u16 - 1;
+            let line_len = content[self.y as usize].len() as u16;
+            let max_x = match mode {
+                Mode::Insert => line_len,
+                _ => line_len.saturating_sub(1),
+            };
+
+            if x > max_x {
+                self.x = max_x;
             } else {
                 self.x = x;
             }
@@ -54,7 +67,8 @@ impl Cursor {
         &mut self,
         x: Option<i16>,
         y: Option<i16>,
-        content: &Vec<String>,
+        content: &[String],
+        mode: &Mode,
     ) -> Result<(), Box<dyn Error>> {
         let new_x = x.map(|dx| {
             let v = self.x as i16 + dx;
@@ -66,26 +80,21 @@ impl Cursor {
             v.max(0) as u16
         });
 
-        self.move_abs(new_x, new_y, content)
+        self.move_abs(new_x, new_y, content, mode)
     }
 }
 
 pub fn handle_cursor_action(
     component: Option<&mut Component>,
     action: &CursorActions,
+    mode: &Mode,
 ) -> Result<(), Box<dyn Error>> {
-    log("run handle_cursor_function")?;
     let component = match component {
         Some(c) => c,
         None => return Ok(()),
     };
-    match action {
-        CursorActions::MoveRel(x, y) => component.cursor.move_rel(
-            Some(x.clone() as i16),
-            Some(y.clone() as i16),
-            &component.content,
-        )?,
-        _ => {}
+    if let CursorActions::MoveRel(x, y) = action {
+        component.cursor.move_rel(Some(*x), Some(*y), &component.content, mode)?;
     }
 
     Ok(())

@@ -1,4 +1,6 @@
 use std::error::Error;
+use std::time::{Duration, Instant};
+use std::path::Path;
 
 use crate::{
     action::{Action, take_action},
@@ -10,45 +12,138 @@ use crate::{
     log::log_startup,
     modal::{Mode, handle_mode_input},
     render::render,
+    status_line::update_status_line,
 };
 
-pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
-    let mut mode = Mode::Normal;
-    let mut active_components: Vec<Component> = Vec::new();
+pub struct Editor {
+    pub mode: Mode,
+    pub config: crate::config::Config,
+    pub active_components: Vec<Component>,
+    pub focused_idx: usize,
+}
 
-    let last = startup(&args, &mut active_components)?;
-    if args.only_startup {
+impl Editor {
+    pub fn new(args: Args) -> Result<Self, Box<dyn Error>> {
+        let config = resolve_config_files(&args)?;
+        let mut active_components = Vec::new();
+        let last_count = startup(&args, &mut active_components)?;
+        
+        let mut focused_idx = last_count.saturating_sub(1);
+        
+        // Ensure initial focused index is a focusable component
+        if !active_components.is_empty() {
+            while !active_components[focused_idx].focusable && focused_idx > 0 {
+                focused_idx -= 1;
+            }
+        }
+
+        // Add status line if enabled
+        if config.status_line.enabled {
+            let mut status_line = Component::new(vec![String::new()], ComponentType::StatusLine, None);
+            status_line.window.window_height = 1;
+            active_components.push(status_line);
+        }
+
+        Ok(Self {
+            mode: Mode::Normal,
+            config,
+            active_components,
+            focused_idx,
+        })
+    }
+
+    pub fn update(&mut self, delta: Duration) -> Result<(), Box<dyn Error>> {
+        // Update status line
+        if self.config.status_line.enabled {
+            update_status_line(&mut self.active_components, &self.config.status_line, self.mode, self.focused_idx, terminal_width()?)?;
+        }
+
+        // Update all components and remove expired ones
+        let mut i = 0;
+        while i < self.active_components.len() {
+            self.active_components[i].update(delta)?;
+            if self.active_components[i].is_expired() {
+                self.active_components.remove(i);
+                // Adjust focus if needed
+                if self.focused_idx >= self.active_components.len() && !self.active_components.is_empty() {
+                    self.focused_idx = self.active_components.len() - 1;
+                }
+            } else {
+                i += 1;
+            }
+        }
+        Ok(())
+    }
+
+    pub fn draw(&mut self) -> Result<(), Box<dyn Error>> {
+        render(&mut self.active_components, &self.mode, self.focused_idx, &self.config)
+    }
+}
+
+pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
+    let mut editor = Editor::new(args)?;
+    
+    if editor.active_components.is_empty() {
         return Ok(());
     }
 
-    loop {
-        for component in active_components.iter_mut() {
-            Component::update(component)?
-        }
+    let mut last_tick = Instant::now();
 
-        let action = handle_mode_input(&mut mode, read_input()?);
+    loop {
+        let delta = last_tick.elapsed();
+        last_tick = Instant::now();
+
+        editor.update(delta)?;
+
+        let old_mode = editor.mode;
+        let action = handle_mode_input(&mut editor.mode, read_input()?);
+
+        if editor.mode != old_mode {
+            crate::log::log(format!("Mode change: {:?} -> {:?}", old_mode, editor.mode))?;
+        }
 
         match action {
             Action::Quit => break,
-            _ => take_action(&action, last, &mut active_components)?,
+            _ => take_action(
+                &action,
+                &mut editor.focused_idx,
+                &mut editor.active_components,
+                &editor.mode,
+                old_mode,
+                &editor.config,
+            )?,
         }
 
-        render(&mut active_components)?;
+        if editor.active_components.is_empty() {
+            break;
+        }
+
+        editor.draw()?;
     }
 
     Ok(())
+}
+
+fn terminal_width() -> Result<u16, Box<dyn Error>> {
+    let (w, _) = crossterm::terminal::size()?;
+    Ok(w)
 }
 
 fn startup(args: &Args, active_components: &mut Vec<Component>) -> Result<usize, Box<dyn Error>> {
     log_startup("Barcode", "pre-alpha")?;
 
     for file in &args.files {
-        let content = open_file(file)?;
-        let content = content.lines().map(|s| s.to_string()).collect();
-        active_components.push(Component::new(content, ComponentType::Buffer));
+        let content_str = open_file(file)?;
+        let mut content: Vec<String> = content_str.lines().map(|s| s.to_string()).collect();
+        if content.is_empty() {
+            content.push("".to_string());
+        }
+        active_components.push(Component::new(
+            content,
+            ComponentType::Buffer,
+            Some(file.clone()),
+        ));
     }
 
-    resolve_config_files(args)?;
-
-    Ok(args.files.len())
+    Ok(active_components.len())
 }

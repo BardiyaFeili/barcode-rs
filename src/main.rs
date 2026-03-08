@@ -12,6 +12,7 @@ use std::{
 
 mod action;
 mod args;
+mod command;
 mod component;
 mod config;
 mod file;
@@ -20,25 +21,39 @@ mod log;
 mod modal;
 mod render;
 mod run;
+mod status_line;
 mod window;
+
+struct TerminalGuard;
+
+impl TerminalGuard {
+    fn new() -> Result<Self, Box<dyn Error>> {
+        enable_raw_mode()?;
+        let mut stdout = stdout();
+        execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+        stdout.flush()?;
+        Ok(TerminalGuard)
+    }
+}
+
+impl Drop for TerminalGuard {
+    fn drop(&mut self) {
+        let _ = disable_raw_mode();
+        let mut stdout = stdout();
+        let _ = execute!(
+            stdout,
+            LeaveAlternateScreen,
+            DisableMouseCapture,
+            cursor::Show
+        );
+        let _ = stdout.flush();
+    }
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = parse_args();
 
-    enable_raw_mode()?;
-    let mut stdout = stdout();
-    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
-    stdout.flush()?;
+    let _guard = TerminalGuard::new()?;
 
-    run(args)?;
-
-    disable_raw_mode()?;
-    execute!(
-        stdout,
-        LeaveAlternateScreen,
-        DisableMouseCapture,
-        cursor::Show
-    )?;
-
-    Ok(())
+    run(args)
 }
