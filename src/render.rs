@@ -5,9 +5,10 @@ use std::{
 
 use crossterm::{
     cursor::{self, SetCursorStyle}, queue,
-    terminal::{self, Clear, ClearType},
+    terminal,
     style::{Color, Print, SetForegroundColor, SetBackgroundColor, ResetColor},
 };
+use unicode_width::UnicodeWidthStr;
 
 use crate::{
     component::{Component, ComponentType},
@@ -57,17 +58,17 @@ pub fn render(active_components: &mut [Component], mode: &Mode, focused_idx: usi
     
     // Subtract status line height if it exists
     if status_line.is_some() {
-        center_height -= 1;
+        center_height = center_height.saturating_sub(1);
     }
 
     for component in tiled_top.iter().chain(tiled_bottom.iter()) {
-        center_height -= component.window.height.unwrap_or(0);
+        center_height = center_height.saturating_sub(component.window.height.unwrap_or(0));
     }
 
     let mut center_flexible_width = terminal_width;
     for component in &tiled_center {
         if !component.window.flexible_x {
-            center_flexible_width -= component.window.width.unwrap_or(0);
+            center_flexible_width = center_flexible_width.saturating_sub(component.window.width.unwrap_or(0));
         }
     }
 
@@ -79,7 +80,7 @@ pub fn render(active_components: &mut [Component], mode: &Mode, focused_idx: usi
 
     let mut active_comp_info = None;
 
-    let mut current_min_x = 0;
+    let mut current_min_x: u16 = 0;
     for component in tiled_center.iter_mut() {
         component.window.window_height = center_height;
         if component.window.flexible_x {
@@ -90,7 +91,7 @@ pub fn render(active_components: &mut [Component], mode: &Mode, focused_idx: usi
             // Tiled windows start at 0,0 relative to their assigned area.
             active_comp_info = Some((current_min_x, 0, component.cursor.x, component.cursor.y, component.window.viewpoint));
         }
-        current_min_x += component.window.window_width;
+        current_min_x = current_min_x.saturating_add(component.window.window_width);
     }
 
     // Floating Layout Calculation & Active check
@@ -98,6 +99,8 @@ pub fn render(active_components: &mut [Component], mode: &Mode, focused_idx: usi
          if active_comp_ptr.is_some_and(|ptr| std::ptr::eq(*component, ptr)) {
             let (abs_x, abs_y) = component.window.calculate_absolute_pos(terminal_width, terminal_height);
             let border_offset = if component.window.border_style != BorderStyle::None { 1 } else { 0 };
+            
+            // Adjust coordinates by border offset for cursor positioning
             active_comp_info = Some((abs_x + border_offset, abs_y + border_offset, component.cursor.x, component.cursor.y, component.window.viewpoint));
         }
     }
@@ -107,6 +110,7 @@ pub fn render(active_components: &mut [Component], mode: &Mode, focused_idx: usi
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn queue_box(
     stdout: &mut std::io::Stdout,
     x: u16,
@@ -116,8 +120,10 @@ fn queue_box(
     style: BorderStyle,
     fg: Color,
     bg: Option<Color>,
+    term_w: u16,
+    term_h: u16,
 ) -> Result<(), Box<dyn Error>> {
-    if style == BorderStyle::None {
+    if style == BorderStyle::None || width < 2 || height < 2 {
         return Ok(());
     }
 
@@ -133,11 +139,46 @@ fn queue_box(
         queue!(stdout, SetBackgroundColor(bg_color))?;
     }
 
-    queue!(stdout, cursor::MoveTo(x, y), Print(tl), Print(h.repeat((width.saturating_sub(2)) as usize)), Print(tr))?;
-    for i in 1..height.saturating_sub(1) {
-        queue!(stdout, cursor::MoveTo(x, y + i), Print(v), cursor::MoveTo(x + width - 1, y + i), Print(v))?;
+    let inner_w = width.saturating_sub(2) as usize;
+    
+    if y < term_h {
+        queue!(stdout, cursor::MoveTo(x, y))?;
+        if x < term_w {
+            queue!(stdout, Print(tl))?;
+            if inner_w > 0 {
+                let h_len = inner_w.min((term_w.saturating_sub(x + 1)) as usize);
+                queue!(stdout, Print(h.repeat(h_len)))?;
+            }
+            if x + width - 1 < term_w {
+                queue!(stdout, Print(tr))?;
+            }
+        }
     }
-    queue!(stdout, cursor::MoveTo(x, y + height.saturating_sub(1)), Print(bl), Print(h.repeat((width.saturating_sub(2)) as usize)), Print(br))?;
+
+    for i in 1..height.saturating_sub(1) {
+        if y + i < term_h {
+            if x < term_w {
+                queue!(stdout, cursor::MoveTo(x, y + i), Print(v))?;
+            }
+            if x + width - 1 < term_w {
+                queue!(stdout, cursor::MoveTo(x + width - 1, y + i), Print(v))?;
+            }
+        }
+    }
+
+    if y + height - 1 < term_h && height > 1 {
+        queue!(stdout, cursor::MoveTo(x, y + height - 1))?;
+        if x < term_w {
+            queue!(stdout, Print(bl))?;
+            if inner_w > 0 {
+                let h_len = inner_w.min((term_w.saturating_sub(x + 1)) as usize);
+                queue!(stdout, Print(h.repeat(h_len)))?;
+            }
+            if x + width - 1 < term_w {
+                queue!(stdout, Print(br))?;
+            }
+        }
+    }
 
     queue!(stdout, ResetColor)?;
     Ok(())
@@ -159,12 +200,10 @@ pub fn draw(
     queue!(
         stdout,
         cursor::Hide,
-        cursor::MoveTo(0, 0),
-        Clear(ClearType::FromCursorDown)
     )?;
 
     // Draw Tiled
-    let mut current_x = 0;
+    let mut current_x: u16 = 0;
     let tiled_count = tiled_center.len();
     for (idx, component) in tiled_center.into_iter().enumerate() {
         let win_w = component.window.window_width;
@@ -172,36 +211,45 @@ pub fn draw(
         let content_w = if idx < tiled_count - 1 { win_w.saturating_sub(1) } else { win_w };
         
         for y in 0..win_h {
+            if y >= terminal_height || current_x >= terminal_width { break; }
             queue!(stdout, cursor::MoveTo(current_x, y))?;
+            
+            let available_row_w = (terminal_width - current_x) as usize;
+            let row_w = (content_w as usize).min(available_row_w);
+
             if let Some(line) = component.window.content.get(y as usize) {
-                let truncated_line = if line.len() > content_w as usize {
-                    &line[..content_w as usize]
-                } else {
-                    line
-                };
-                queue!(stdout, Print(truncated_line))?;
-                // Fill rest of the line width with spaces to overwrite old content
-                if truncated_line.len() < content_w as usize {
-                    queue!(stdout, Print(" ".repeat(content_w as usize - truncated_line.len())))?;
+                let mut display_line = String::new();
+                let mut curr_w = 0;
+                for c in line.chars() {
+                    let cw = UnicodeWidthStr::width(c.to_string().as_str());
+                    if curr_w + cw > row_w { break; }
+                    display_line.push(c);
+                    curr_w += cw;
+                }
+                
+                queue!(stdout, Print(&display_line))?;
+                if curr_w < row_w {
+                    queue!(stdout, Print(" ".repeat(row_w - curr_w)))?;
                 }
             } else {
-                queue!(stdout, Print(" ".repeat(content_w as usize)))?;
+                queue!(stdout, Print(" ".repeat(row_w)))?;
             }
             
             // Draw vertical border if not last component
-            if idx < tiled_count - 1 {
+            if idx < tiled_count - 1 && current_x + win_w - 1 < terminal_width {
                 queue!(stdout, cursor::MoveTo(current_x + win_w - 1, y), SetForegroundColor(Color::DarkGrey), Print("│"), ResetColor)?;
             }
         }
-        current_x += win_w;
+        current_x = current_x.saturating_add(win_w);
     }
 
     // Draw Status Line
     if let Some(status) = status_line {
         let bar_bg = Color::White;
         let bar_fg = Color::Black;
+        let y = terminal_height.saturating_sub(1);
         
-        queue!(stdout, cursor::MoveTo(0, terminal_height - 1))?;
+        queue!(stdout, cursor::MoveTo(0, y))?;
         
         // 1. Draw Left End
         queue!(stdout, ResetColor, SetForegroundColor(bar_bg))?;
@@ -223,6 +271,8 @@ pub fn draw(
     for component in floating {
         let (abs_x, abs_y) = component.window.calculate_absolute_pos(terminal_width, terminal_height);
         let win = &component.window;
+        let win_w = win.window_width.min(terminal_width.saturating_sub(abs_x));
+        let win_h = win.window_height.min(terminal_height.saturating_sub(abs_y));
         let has_border = win.border_style != BorderStyle::None;
         
         if let Some(bg) = win.colors.content_bg {
@@ -230,38 +280,42 @@ pub fn draw(
         } else {
             queue!(stdout, SetBackgroundColor(Color::Reset))?;
         }
-        for i in 0..win.window_height {
-            queue!(stdout, cursor::MoveTo(abs_x, abs_y + i), Print(" ".repeat(win.window_width as usize)))?;
+        for i in 0..win_h {
+            queue!(stdout, cursor::MoveTo(abs_x, abs_y + i), Print(" ".repeat(win_w as usize)))?;
         }
 
         if has_border {
-            queue_box(&mut stdout, abs_x, abs_y, win.window_width, win.window_height, win.border_style, win.colors.border_fg, win.colors.border_bg)?;
+            queue_box(&mut stdout, abs_x, abs_y, win.window_width, win.window_height, win.border_style, win.colors.border_fg, win.colors.border_bg, terminal_width, terminal_height)?;
         }
 
         let content_x = if has_border { abs_x + 1 } else { abs_x };
         let content_y = if has_border { abs_y + 1 } else { abs_y };
-        let content_height = if has_border { win.window_height.saturating_sub(2) } else { win.window_height };
-        let content_width = if has_border { win.window_width.saturating_sub(2) } else { win.window_width };
+        let content_h = if has_border { win_h.saturating_sub(2) } else { win_h };
+        let content_w = if has_border { win_w.saturating_sub(2) } else { win_w };
 
         queue!(stdout, SetForegroundColor(win.colors.content_fg))?;
         if let Some(bg) = win.colors.content_bg {
             queue!(stdout, SetBackgroundColor(bg))?;
         }
 
-        for (i, line) in component.window.content.iter().take(content_height as usize).enumerate() {
-            queue!(stdout, cursor::MoveTo(content_x, content_y + i as u16))?;
+        for (i, line) in component.window.content.iter().take(content_h as usize).enumerate() {
+            if content_y + (i as u16) >= terminal_height { break; }
+            queue!(stdout, cursor::MoveTo(content_x, content_y + (i as u16)))?;
             
-            let mut display_line = line.clone();
+            let mut text = line.clone();
             if component.component_type == ComponentType::Input {
-                display_line = format!(":{}", line);
+                text = format!(":{}", line);
             }
             
-            let truncated_line = if display_line.len() > content_width as usize {
-                &display_line[..content_width as usize]
-            } else {
-                &display_line
-            };
-            queue!(stdout, Print(truncated_line))?;
+            let mut display_line = String::new();
+            let mut curr_w = 0;
+            for c in text.chars() {
+                let cw = UnicodeWidthStr::width(c.to_string().as_str());
+                if curr_w + cw > content_w as usize { break; }
+                display_line.push(c);
+                curr_w += cw;
+            }
+            queue!(stdout, Print(&display_line))?;
         }
         queue!(stdout, ResetColor)?;
     }
@@ -269,26 +323,28 @@ pub fn draw(
     // Draw Cursor
     if let Some((abs_x, abs_y, cursor_x, cursor_y, viewpoint)) = active_comp_info {
         let relative_y = cursor_y as i32 - viewpoint as i32;
-        if relative_y >= 0 {
+        if relative_y >= 0 && (abs_y + relative_y as u16) < terminal_height && (abs_x + cursor_x) < terminal_width {
              let mut final_x = abs_x + cursor_x;
              let final_y = abs_y + relative_y as u16;
 
              if is_active_input {
-                 final_x += 1;
+                 final_x = final_x.saturating_add(1);
              }
 
-            let (cursor_style, cx, cy) = match mode {
-                Mode::Command => (SetCursorStyle::SteadyBar, final_x, final_y),
-                Mode::Insert => (SetCursorStyle::SteadyBar, final_x, final_y),
-                _ => (SetCursorStyle::SteadyBlock, final_x, final_y),
-            };
-            
-            queue!(
-                stdout,
-                cursor_style,
-                cursor::MoveTo(cx, cy),
-                cursor::Show
-            )?;
+            if final_x < terminal_width {
+                let (cursor_style, cx, cy) = match mode {
+                    Mode::Command => (SetCursorStyle::SteadyBar, final_x, final_y),
+                    Mode::Insert => (SetCursorStyle::SteadyBar, final_x, final_y),
+                    _ => (SetCursorStyle::SteadyBlock, final_x, final_y),
+                };
+                
+                queue!(
+                    stdout,
+                    cursor_style,
+                    cursor::MoveTo(cx, cy),
+                    cursor::Show
+                )?;
+            }
         }
     }
 

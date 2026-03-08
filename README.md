@@ -36,6 +36,10 @@ Clone the repository and run:
 - Press `i` to enter Insert mode
 - Other commands and modes are still under development
 
+## Configuration
+
+Barcode is highly configurable. See [CONFIG.md](CONFIG.md) for details on available options and configuration paths.
+
 ## Planned features
 
 - Syntax highlighting

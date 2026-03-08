@@ -1,8 +1,8 @@
-use std::sync::Mutex;
 use crate::{
     action::{Action, CursorActions, TextActions, WindowActions},
     input::InputEvent,
 };
+use std::sync::Mutex;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mode {
@@ -35,13 +35,10 @@ pub fn handle_mode_input(mode: &mut Mode, event: InputEvent) -> Action {
 fn handle_normal_mode(event: InputEvent) -> Action {
     if let InputEvent::Key(key_event) = event {
         use crossterm::event::{KeyCode::*, KeyModifiers};
-        
+
         // Handle Ctrl-w combinations
-        if key_event.modifiers.contains(KeyModifiers::CONTROL) {
-            match key_event.code {
-                Char('w') => return Action::Window(WindowActions::Next),
-                _ => {}
-            }
+        if key_event.modifiers.contains(KeyModifiers::CONTROL) && key_event.code == Char('w') {
+            return Action::Window(WindowActions::Next);
         }
 
         match key_event.code {
@@ -87,10 +84,9 @@ fn handle_insert_mode(event: InputEvent) -> Action {
 fn handle_visual_mode(event: InputEvent) -> Action {
     if let InputEvent::Key(key_event) = event {
         use crossterm::event::KeyCode::*;
-        match key_event.code {
-            Esc => Action::Mode(Mode::Normal),
-            _ => Action::None,
-        };
+        if key_event.code == Esc {
+            return Action::Mode(Mode::Normal);
+        }
     }
     Action::None
 }
@@ -99,9 +95,7 @@ fn handle_command_mode(event: InputEvent) -> Action {
     if let InputEvent::Key(key_event) = event {
         use crossterm::event::KeyCode::*;
         match key_event.code {
-            Esc => {
-                Action::Mode(Mode::Normal)
-            },
+            Esc => Action::Mode(Mode::Normal),
             Enter => {
                 let cmd = if let Ok(mut buffer) = INPUT_BUFFER.lock() {
                     let cmd = buffer.clone();
@@ -111,7 +105,7 @@ fn handle_command_mode(event: InputEvent) -> Action {
                     String::new()
                 };
                 Action::ExecuteCommand(cmd)
-            },
+            }
             Backspace => {
                 if let Ok(mut buffer) = INPUT_BUFFER.lock() {
                     buffer.pop();
@@ -119,7 +113,7 @@ fn handle_command_mode(event: InputEvent) -> Action {
                 } else {
                     Action::None
                 }
-            },
+            }
             Char(c) => {
                 if let Ok(mut buffer) = INPUT_BUFFER.lock() {
                     buffer.push(c);
@@ -127,7 +121,7 @@ fn handle_command_mode(event: InputEvent) -> Action {
                 } else {
                     Action::None
                 }
-            },
+            }
             Left => Action::Cursor(CursorActions::MoveRel(-1, 0)),
             Right => Action::Cursor(CursorActions::MoveRel(1, 0)),
             _ => Action::None,
@@ -137,6 +131,7 @@ fn handle_command_mode(event: InputEvent) -> Action {
     }
 }
 
+#[allow(dead_code)]
 pub fn get_input_buffer() -> String {
     if let Ok(buffer) = INPUT_BUFFER.lock() {
         buffer.clone()

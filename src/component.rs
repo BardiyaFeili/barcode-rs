@@ -1,12 +1,11 @@
-use std::error::Error;
-use std::time::Duration;
-
 use crate::{
     action::TextActions,
     input::Cursor,
     modal::Mode,
     window::{HorizontalAnchor, VerticalAnchor, Window, WindowType},
 };
+use std::error::Error;
+use std::time::Duration;
 
 pub struct Component {
     pub content: Vec<String>,
@@ -18,6 +17,7 @@ pub struct Component {
     pub cursor: Cursor,
     pub window: Window,
     pub timer: Option<Duration>,
+    pub needs_update: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -29,10 +29,21 @@ pub enum ComponentType {
 }
 
 impl Component {
-    pub fn new(content: Vec<String>, component_type: ComponentType, file_path: Option<String>) -> Component {
+    pub fn new(
+        content: Vec<String>,
+        component_type: ComponentType,
+        file_path: Option<String>,
+    ) -> Component {
         let focusable = match component_type {
             ComponentType::Buffer | ComponentType::Input => true,
             ComponentType::Notification | ComponentType::StatusLine => false,
+        };
+
+        let (window_type, h_anchor, v_anchor) = match component_type {
+            ComponentType::Buffer => (WindowType::Tile, HorizontalAnchor::Left, VerticalAnchor::Center),
+            ComponentType::Notification => (WindowType::Floating, HorizontalAnchor::Right, VerticalAnchor::Top),
+            ComponentType::Input => (WindowType::Floating, HorizontalAnchor::Center, VerticalAnchor::Bottom),
+            ComponentType::StatusLine => (WindowType::Tile, HorizontalAnchor::Left, VerticalAnchor::Bottom),
         };
 
         Component {
@@ -48,17 +59,18 @@ impl Component {
                 None,
                 true,
                 true,
-                WindowType::Tile,
-                HorizontalAnchor::Left,
-                VerticalAnchor::Center,
+                window_type,
+                h_anchor,
+                v_anchor,
                 false,
                 0,
             )
             .unwrap(),
             timer: None,
+            needs_update: true,
         }
     }
-    
+
     pub fn with_timer(mut self, duration: Duration) -> Self {
         self.timer = Some(duration);
         self
@@ -69,18 +81,21 @@ impl Component {
             *timer = timer.saturating_sub(delta);
         }
 
-        let render_content = Component::ready_content(
-            &self.content,
-            self.window.viewpoint,
-            self.window.window_height,
-        );
+        // Only update window content if necessary
+        if self.needs_update || self.window.content.is_empty() {
+            self.window.content = Component::ready_content(
+                &self.content,
+                self.window.viewpoint,
+                self.window.window_height,
+            );
+            self.needs_update = false;
+        }
 
-        self.window.content = render_content;
         Ok(())
     }
 
     pub fn is_expired(&self) -> bool {
-        self.timer.map_or(false, |t| t.is_zero())
+        self.timer.is_some_and(|t| t.is_zero())
     }
 
     fn ready_content(content: &[String], viewpoint: usize, window_height: u16) -> Vec<String> {
@@ -120,6 +135,7 @@ pub fn handle_write_action(
             component.content.insert(y + 1, new_line);
             component.cursor.y += 1;
             component.cursor.x = 0;
+            component.needs_update = true;
         }
         TextActions::Delete => {
             let x = component.cursor.x as usize;
@@ -129,6 +145,7 @@ pub fn handle_write_action(
                 // Remove character before cursor
                 component.content[y].remove(x - 1);
                 component.cursor.x -= 1;
+                component.needs_update = true;
             } else if y > 0 {
                 // Join with previous line
                 let current_line = component.content.remove(y);
@@ -137,6 +154,7 @@ pub fn handle_write_action(
                 prev_line.push_str(&current_line);
                 component.cursor.y -= 1;
                 component.cursor.x = prev_len;
+                component.needs_update = true;
             }
         }
         TextActions::Insert(c) => {
@@ -144,6 +162,7 @@ pub fn handle_write_action(
             component
                 .cursor
                 .move_rel(Some(1), None, &component.content, mode)?;
+            component.needs_update = true;
         }
     }
     Ok(())

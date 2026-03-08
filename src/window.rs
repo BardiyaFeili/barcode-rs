@@ -2,6 +2,8 @@ use std::error::Error;
 use crossterm::{terminal, style::Color};
 use serde::Deserialize;
 
+use crate::{action::WindowActions, component::Component};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 pub enum WindowType {
     Tile,
@@ -9,6 +11,7 @@ pub enum WindowType {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum BorderStyle {
     None,
     Single,
@@ -17,16 +20,24 @@ pub enum BorderStyle {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum HorizontalAnchor {
+    #[serde(alias = "l")]
     Left,
+    #[serde(alias = "c")]
     Center,
+    #[serde(alias = "r")]
     Right,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum VerticalAnchor {
+    #[serde(alias = "t")]
     Top,
+    #[serde(alias = "c")]
     Center,
+    #[serde(alias = "b")]
     Bottom,
 }
 
@@ -57,6 +68,7 @@ pub struct Window {
     pub window_width: u16,
     pub window_height: u16,
     pub flexible_x: bool,
+    #[allow(dead_code)]
     pub flexible_y: bool,
     pub window_type: WindowType,
     pub h_anchor: HorizontalAnchor,
@@ -111,6 +123,7 @@ impl Window {
         })
     }
 
+    #[allow(dead_code)]
     pub fn set_floating(&mut self, x: u16, y: u16, width: u16, height: u16, border: BorderStyle) {
         self.window_type = WindowType::Floating;
         self.x = x;
@@ -122,21 +135,75 @@ impl Window {
 
     pub fn calculate_absolute_pos(&self, term_w: u16, term_h: u16) -> (u16, u16) {
         if self.window_type == WindowType::Tile {
-            return (0, 0); // Tiled position is handled by render logic
+            return (0, 0); 
         }
 
+        // 1. Ensure window itself isn't larger than terminal
+        let effective_w = self.window_width.min(term_w);
+        let effective_h = self.window_height.min(term_h);
+
+        // 2. Calculate anchored positions with clamping
         let x = match self.h_anchor {
-            HorizontalAnchor::Left => self.x,
-            HorizontalAnchor::Center => (term_w.saturating_sub(self.window_width)) / 2,
-            HorizontalAnchor::Right => term_w.saturating_sub(self.window_width + self.x),
+            HorizontalAnchor::Left => self.x.min(term_w.saturating_sub(effective_w)),
+            HorizontalAnchor::Center => (term_w.saturating_sub(effective_w)) / 2,
+            HorizontalAnchor::Right => term_w.saturating_sub(effective_w.saturating_add(self.x)),
         };
 
         let y = match self.v_anchor {
-            VerticalAnchor::Top => self.y,
-            VerticalAnchor::Center => (term_h.saturating_sub(self.window_height)) / 2,
-            VerticalAnchor::Bottom => term_h.saturating_sub(self.window_height + self.y),
+            VerticalAnchor::Top => self.y.min(term_h.saturating_sub(effective_h)),
+            VerticalAnchor::Center => (term_h.saturating_sub(effective_h)) / 2,
+            VerticalAnchor::Bottom => term_h.saturating_sub(effective_h.saturating_add(self.y)),
         };
 
         (x, y)
     }
+}
+
+pub fn handle_window_action(
+    action: &WindowActions,
+    focused_idx: &mut usize,
+    active_components: &[Component],
+) -> Result<(), Box<dyn Error>> {
+    match action {
+        WindowActions::Next => {
+            if !active_components.is_empty() {
+                let mut next = (*focused_idx + 1) % active_components.len();
+                let start = next;
+                while !active_components[next].focusable {
+                    next = (next + 1) % active_components.len();
+                    if next == start {
+                        break;
+                    }
+                }
+                *focused_idx = next;
+            }
+        }
+        WindowActions::Previous => {
+            if !active_components.is_empty() {
+                let mut prev = if *focused_idx == 0 {
+                    active_components.len() - 1
+                } else {
+                    *focused_idx - 1
+                };
+                let start = prev;
+                while !active_components[prev].focusable {
+                    prev = if prev == 0 {
+                        active_components.len() - 1
+                    } else {
+                        prev - 1
+                    };
+                    if prev == start {
+                        break;
+                    }
+                }
+                *focused_idx = prev;
+            }
+        }
+        WindowActions::Focus(idx) => {
+            if *idx < active_components.len() && active_components[*idx].focusable {
+                *focused_idx = *idx;
+            }
+        }
+    }
+    Ok(())
 }

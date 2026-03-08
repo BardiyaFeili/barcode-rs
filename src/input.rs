@@ -1,7 +1,6 @@
 use crossterm::event::{self, Event, KeyEvent};
 use std::error::Error;
 use std::io;
-use std::time::Duration;
 
 use crate::{action::CursorActions, component::Component, modal::Mode};
 
@@ -11,13 +10,9 @@ pub enum InputEvent {
 }
 
 pub fn read_input() -> io::Result<InputEvent> {
-    if event::poll(Duration::from_millis(100))? {
-        match event::read()? {
-            Event::Key(key) => Ok(InputEvent::Key(key)),
-            _ => Ok(InputEvent::None),
-        }
-    } else {
-        Ok(InputEvent::None)
+    match event::read()? {
+        Event::Key(key) => Ok(InputEvent::Key(key)),
+        _ => Ok(InputEvent::None),
     }
 }
 
@@ -95,6 +90,7 @@ pub fn handle_cursor_action(
     };
     if let CursorActions::MoveRel(x, y) = action {
         component.cursor.move_rel(Some(*x), Some(*y), &component.content, mode)?;
+        component.needs_update = true;
     }
 
     Ok(())

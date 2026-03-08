@@ -13,7 +13,7 @@ pub fn handle_command(
     focused_idx: &mut usize,
     config: &Config,
 ) -> Result<(), Box<dyn Error>> {
-    let parts: Vec<&str> = cmd.trim().split_whitespace().collect();
+    let parts: Vec<&str> = cmd.split_whitespace().collect();
     if parts.is_empty() {
         return Ok(());
     }
@@ -39,12 +39,11 @@ pub fn handle_command(
             }
         }
         "wq" => {
-            if let Some(comp) = components.get(*focused_idx) {
-                if let Some(path) = &comp.file_path {
+            if let Some(comp) = components.get(*focused_idx)
+                && let Some(path) = &comp.file_path {
                     save_file(path, &comp.content)?;
                     log(format!("File saved: {}", path))?;
                     push_notification(components, format!("Saved {}", path), config)?;
-                }
             }
             if !components.is_empty() {
                 components.remove(*focused_idx);
@@ -59,22 +58,20 @@ pub fn handle_command(
         }
         "wa" => {
             for comp in components.iter() {
-                if comp.component_type == ComponentType::Buffer {
-                    if let Some(path) = &comp.file_path {
+                if comp.component_type == ComponentType::Buffer
+                    && let Some(path) = &comp.file_path {
                         save_file(path, &comp.content)?;
                         log(format!("File saved: {}", path))?;
-                    }
                 }
             }
             push_notification(components, "Saved all buffers".to_string(), config)?;
         }
         "wqa" => {
             for comp in components.iter() {
-                if comp.component_type == ComponentType::Buffer {
-                    if let Some(path) = &comp.file_path {
+                if comp.component_type == ComponentType::Buffer
+                    && let Some(path) = &comp.file_path {
                         save_file(path, &comp.content)?;
                         log(format!("File saved: {}", path))?;
-                    }
                 }
             }
             components.clear();
@@ -117,12 +114,13 @@ fn push_notification(components: &mut Vec<Component>, message: String, config: &
         None
     ).with_timer(Duration::from_secs(cfg.timeout_secs));
     
+    notify.window.window_type = crate::window::WindowType::Floating;
     notify.window.h_anchor = cfg.h_anchor;
     notify.window.v_anchor = cfg.v_anchor;
-    notify.window.x = cfg.x;
-    notify.window.y = cfg.y;
-    notify.window.window_width = cfg.width;
-    notify.window.window_height = cfg.height;
+    notify.window.x = 2;
+    notify.window.y = 1;
+    notify.window.window_width = 30;
+    notify.window.window_height = 3;
     notify.window.border_style = cfg.border_style;
     
     components.push(notify);

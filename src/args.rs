@@ -11,7 +11,7 @@ use clap::Parser;
 pub struct Args {
     /// Files to open on startup
     pub files: Vec<String>,
-    
+
     /// Path to the main config.toml override
     #[arg(long, value_name = "FILE")]
     pub config_file: Option<PathBuf>,
@@ -31,7 +31,7 @@ pub struct Args {
     /// Skip requiring global config files to exist
     #[arg(long)]
     pub dont_require_global_configs: bool,
-    
+
     /// Only run startup routines, then exit
     #[arg(long)]
     pub only_startup: bool,
