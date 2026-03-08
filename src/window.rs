@@ -1,8 +1,11 @@
-use std::error::Error;
-use crossterm::{terminal, style::Color};
+use crossterm::{style::Color, terminal};
 use serde::Deserialize;
+use std::error::Error;
 
-use crate::{action::WindowActions, component::{Component, ComponentType}};
+use crate::{
+    action::WindowActions,
+    component::{Component, ComponentType},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 pub enum WindowType {
@@ -130,7 +133,7 @@ impl Window {
 
     pub fn calculate_absolute_pos(&self, term_w: u16, term_h: u16) -> (u16, u16) {
         if self.window_type == WindowType::Tile {
-            return (0, 0); 
+            return (0, 0);
         }
 
         // 1. Ensure window itself isn't larger than terminal
@@ -159,15 +162,19 @@ pub fn recalculate_layouts(components: &mut [Component]) -> Result<(), Box<dyn E
 
     let mut tiled_center = Vec::new();
     let mut status_line_exists = false;
-    
+
     // For now we only handle Center tiled windows and StatusLine
     for component in components.iter_mut() {
-        if component.window.hidden { continue; }
+        if component.window.hidden {
+            continue;
+        }
         if component.component_type == ComponentType::StatusLine {
             status_line_exists = true;
             continue;
         }
-        if component.window.window_type == WindowType::Tile && component.window.v_anchor == VerticalAnchor::Center {
+        if component.window.window_type == WindowType::Tile
+            && component.window.v_anchor == VerticalAnchor::Center
+        {
             tiled_center.push(component);
         }
     }
@@ -180,7 +187,8 @@ pub fn recalculate_layouts(components: &mut [Component]) -> Result<(), Box<dyn E
     let mut center_flexible_width = terminal_width;
     for component in &tiled_center {
         if !component.window.flexible_x {
-            center_flexible_width = center_flexible_width.saturating_sub(component.window.width.unwrap_or(0));
+            center_flexible_width =
+                center_flexible_width.saturating_sub(component.window.width.unwrap_or(0));
         }
     }
 
@@ -196,7 +204,9 @@ pub fn recalculate_layouts(components: &mut [Component]) -> Result<(), Box<dyn E
     };
 
     let mut distributed_width = 0;
-    let flex_indices: Vec<usize> = tiled_center.iter().enumerate()
+    let flex_indices: Vec<usize> = tiled_center
+        .iter()
+        .enumerate()
         .filter(|(_, c)| c.window.flexible_x)
         .map(|(i, _)| i)
         .collect();
@@ -209,7 +219,8 @@ pub fn recalculate_layouts(components: &mut [Component]) -> Result<(), Box<dyn E
         if component.window.flexible_x {
             if Some(&idx) == flex_indices.last() {
                 // Last flexible window gets the remaining width
-                component.window.window_width = center_flexible_width.saturating_sub(distributed_width);
+                component.window.window_width =
+                    center_flexible_width.saturating_sub(distributed_width);
             } else {
                 component.window.window_width = center_flexible_window_width;
                 distributed_width = distributed_width.saturating_add(center_flexible_window_width);
@@ -227,10 +238,14 @@ pub fn recalculate_layouts(components: &mut [Component]) -> Result<(), Box<dyn E
     Ok(())
 }
 
-pub fn remove_component(components: &mut Vec<Component>, focused_idx: &mut usize, target_idx: usize) {
+pub fn remove_component(
+    components: &mut Vec<Component>,
+    focused_idx: &mut usize,
+    target_idx: usize,
+) {
     if target_idx < components.len() {
         components.remove(target_idx);
-        
+
         if components.is_empty() {
             *focused_idx = 0;
             return;
@@ -246,9 +261,9 @@ pub fn remove_component(components: &mut Vec<Component>, focused_idx: &mut usize
             *focused_idx = components.len() - 1;
         }
 
-        // Ensure focused index is focusable. 
-        // When we remove a component (especially the command bar), 
-        // we usually want to go BACKWARDS to find the last focused buffer.
+        // Ensure focused index is focusable.
+        // When we remove a component (especially the command bar),
+        // we usually want to go BACKWARDS to find the last focused buffer
         let start_idx = *focused_idx;
         while !components[*focused_idx].focusable {
             if *focused_idx > 0 {

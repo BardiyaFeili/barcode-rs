@@ -99,9 +99,7 @@ specified by name (e.g., `"white"`, `"red"`, `"grey"`) or as hex codes
   or `"none"` for terminal transparency.
 - `fg` (string, default: `"reset"`): Default text color.
 - `border` (string, default: `"grey"`): Color for inactive window borders.
-- `status_bg` (string, default: `"white"`): Background color of the status
-
-line.
+- `status_bg` (string, default: `"white"`): Background color of the status line
 
 - `status_fg` (string, default: `"black"`): Foreground color of the status
   line.

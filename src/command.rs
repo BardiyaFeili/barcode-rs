@@ -55,35 +55,30 @@ pub fn handle_command(
             }
         }
         "q" => {
-            if let Some(comp) = components.get(*focused_idx) {
-                if comp.modified && comp.component_type == ComponentType::Buffer {
-                    return Ok(Action::Prompt(PromptAction::ConfirmQuit(*focused_idx)));
-                }
+            if let Some(comp) = components.get(*focused_idx)
+                && comp.modified && comp.component_type == ComponentType::Buffer {
+                return Ok(Action::Prompt(PromptAction::ConfirmQuit(*focused_idx)));
             }
             remove_component(components, focused_idx, *focused_idx);
         }
         "wq" => {
-            if let Some(comp) = components.get(*focused_idx) {
-                if let Some(path) = &comp.file_path {
-                    if !parent_exists(path) {
-                        return Ok(Action::Prompt(PromptAction::ConfirmCreateDir(*focused_idx, path.clone())));
-                    }
-                    save_file(path, &comp.content)?;
-                    if let Some(comp_mut) = components.get_mut(*focused_idx) {
-                        comp_mut.modified = false;
-                    }
-                    remove_component(components, focused_idx, *focused_idx);
-                } else {
-                    return Ok(Action::Prompt(PromptAction::ConfirmSaveAs(*focused_idx, String::new())));
+            if let Some(comp) = components.get(*focused_idx)
+                && let Some(path) = &comp.file_path {
+                if !parent_exists(path) {
+                    return Ok(Action::Prompt(PromptAction::ConfirmCreateDir(*focused_idx, path.clone())));
                 }
+                save_file(path, &comp.content)?;
+                if let Some(comp_mut) = components.get_mut(*focused_idx) {
+                    comp_mut.modified = false;
+                }
+                remove_component(components, focused_idx, *focused_idx);
+            } else {
+                return Ok(Action::Prompt(PromptAction::ConfirmSaveAs(*focused_idx, String::new())));
             }
         }
         "qa" => {
-            // Check for any modified buffers
-            for i in 0..components.len() {
-                if components[i].component_type == ComponentType::Buffer && components[i].modified {
-                    // For now, let's just prompt for the first modified one
-                    // or we could have a ConfirmQuitAll
+            for (i, comp) in components.iter().enumerate() {
+                if comp.component_type == ComponentType::Buffer && comp.modified {
                     return Ok(Action::Prompt(PromptAction::ConfirmQuit(i)));
                 }
             }
@@ -92,21 +87,21 @@ pub fn handle_command(
             return Ok(Action::Quit);
         }
         "wa" => {
-            for i in 0..components.len() {
-                if components[i].component_type == ComponentType::Buffer
-                    && let Some(path) = components[i].file_path.clone() {
-                        save_file(&path, &components[i].content)?;
-                        components[i].modified = false;
+            for comp in components.iter_mut() {
+                if comp.component_type == ComponentType::Buffer
+                    && let Some(path) = comp.file_path.clone() {
+                        save_file(&path, &comp.content)?;
+                        comp.modified = false;
                 }
             }
             push_notification(components, "Saved all buffers".to_string(), config)?;
         }
         "wqa" => {
-            for i in 0..components.len() {
-                if components[i].component_type == ComponentType::Buffer
-                    && let Some(path) = components[i].file_path.clone() {
-                        save_file(&path, &components[i].content)?;
-                        components[i].modified = false;
+            for comp in components.iter_mut() {
+                if comp.component_type == ComponentType::Buffer
+                    && let Some(path) = comp.file_path.clone() {
+                        save_file(&path, &comp.content)?;
+                        comp.modified = false;
                 }
             }
             components.clear();

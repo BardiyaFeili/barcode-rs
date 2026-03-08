@@ -28,10 +28,6 @@ pub struct Args {
     #[arg(long, value_name = "DIR")]
     pub config_home: Option<PathBuf>,
 
-    /// Skip requiring global config files to exist
-    #[arg(long)]
-    pub dont_require_global_configs: bool,
-
     /// Only run startup routines, then exit
     #[arg(long)]
     pub only_startup: bool,

@@ -26,8 +26,8 @@ pub enum Action {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum PromptAction {
-    ConfirmQuit(usize), // buffer index
-    ConfirmSaveAs(usize, String), // buffer index, path
+    ConfirmQuit(usize),              // buffer index
+    ConfirmSaveAs(usize, String),    // buffer index, path
     ConfirmCreateDir(usize, String), // buffer index, path
 }
 
@@ -72,7 +72,8 @@ pub fn take_action(
     // UI management based on mode transitions
     if *mode == Mode::Command && old_mode != Mode::Command {
         // Entering command mode: create input component
-        let mut input_comp = Component::new(vec![String::new()], ComponentType::Input, None, config);
+        let mut input_comp =
+            Component::new(vec![String::new()], ComponentType::Input, None, config);
         let cfg = &config.input;
         input_comp.window.window_type = WindowType::Floating;
         input_comp.window.h_anchor = cfg.h_anchor;
@@ -121,7 +122,14 @@ pub fn take_action(
             remove_input_component(active_components, focused_idx);
             let action = handle_command(cmd, active_components, focused_idx, config)?;
             if action != Action::None {
-                return take_action(&action, focused_idx, active_components, mode, old_mode, config);
+                return take_action(
+                    &action,
+                    focused_idx,
+                    active_components,
+                    mode,
+                    old_mode,
+                    config,
+                );
             }
         }
         Action::Window(a) => {
@@ -131,12 +139,14 @@ pub fn take_action(
             let msg = match &p {
                 PromptAction::ConfirmQuit(_) => "Unsaved changes. Quit anyway? (y/n)".to_string(),
                 PromptAction::ConfirmSaveAs(_, _) => "Save as: ".to_string(),
-                PromptAction::ConfirmCreateDir(_, _) => "Directory does not exist. Create? (y/n)".to_string(),
+                PromptAction::ConfirmCreateDir(_, _) => {
+                    "Directory does not exist. Create? (y/n)".to_string()
+                }
             };
-            
+
             let mut input_comp = Component::new(vec![msg], ComponentType::Input, None, config)
                 .with_prompt_action(p.clone());
-            
+
             let cfg = &config.input;
             input_comp.window.window_type = WindowType::Floating;
             input_comp.window.h_anchor = cfg.h_anchor;
@@ -156,7 +166,13 @@ pub fn take_action(
             *focused_idx = active_components.len() - 1;
         }
         Action::ExecutePrompt(p, response) => {
-            handle_execute_prompt(p.clone(), response.clone(), active_components, focused_idx, config)?;
+            handle_execute_prompt(
+                p.clone(),
+                response.clone(),
+                active_components,
+                focused_idx,
+                config,
+            )?;
         }
         _ => (),
     }
@@ -186,12 +202,13 @@ fn handle_execute_prompt(
                 if !crate::file::parent_exists(&path) {
                     // Chain a second prompt for directory creation
                     let mut input_comp = Component::new(
-                        vec!["Directory does not exist. Create? (y/n)".to_string()], 
-                        ComponentType::Input, 
-                        None, 
-                        config
-                    ).with_prompt_action(PromptAction::ConfirmCreateDir(idx, path));
-                    
+                        vec!["Directory does not exist. Create? (y/n)".to_string()],
+                        ComponentType::Input,
+                        None,
+                        config,
+                    )
+                    .with_prompt_action(PromptAction::ConfirmCreateDir(idx, path));
+
                     let cfg = &config.input;
                     input_comp.window.window_type = WindowType::Floating;
                     input_comp.window.h_anchor = cfg.h_anchor;
@@ -201,25 +218,33 @@ fn handle_execute_prompt(
                     input_comp.window.window_width = 80;
                     input_comp.window.window_height = 3;
                     input_comp.window.border_style = cfg.border_style;
-                    
+
                     active_components.push(input_comp);
                     *focused_idx = active_components.len() - 1;
                 } else if let Some(comp) = active_components.get_mut(idx) {
                     comp.file_path = Some(path.clone());
                     crate::file::save_file(&path, &comp.content)?;
                     comp.modified = false;
-                    crate::notification::push_notification(active_components, format!("Saved {}", path), config)?;
+                    crate::notification::push_notification(
+                        active_components,
+                        format!("Saved {}", path),
+                        config,
+                    )?;
                 }
             }
         }
         PromptAction::ConfirmCreateDir(idx, path) => {
-            if r == "y" {
-                if let Some(comp) = active_components.get_mut(idx) {
-                    comp.file_path = Some(path.clone());
-                    crate::file::save_file(&path, &comp.content)?;
-                    comp.modified = false;
-                    crate::notification::push_notification(active_components, format!("Saved {}", path), config)?;
-                }
+            if let Some(comp) = active_components.get_mut(idx)
+                && r == "y"
+            {
+                comp.file_path = Some(path.clone());
+                crate::file::save_file(&path, &comp.content)?;
+                comp.modified = false;
+                crate::notification::push_notification(
+                    active_components,
+                    format!("Saved {}", path),
+                    config,
+                )?;
             }
         }
     }

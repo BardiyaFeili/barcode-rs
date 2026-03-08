@@ -1,7 +1,7 @@
 use crate::{
-    action::{Action, CursorActions, TextActions, WindowActions, PromptAction},
-    input::InputEvent,
+    action::{Action, CursorActions, PromptAction, TextActions, WindowActions},
     component::Component,
+    input::InputEvent,
 };
 use std::sync::Mutex;
 
@@ -16,7 +16,12 @@ pub enum Mode {
 static INPUT_BUFFER: Mutex<String> = Mutex::new(String::new());
 
 /// The “mother” function — routes input to the right mode handler.
-pub fn handle_mode_input(mode: &mut Mode, event: InputEvent, components: &mut [Component], focused_idx: usize) -> Action {
+pub fn handle_mode_input(
+    mode: &mut Mode,
+    event: InputEvent,
+    components: &mut [Component],
+    focused_idx: usize,
+) -> Action {
     if focused_idx < components.len() {
         let component = &mut components[focused_idx];
         if component.prompt_action.is_some() {
@@ -43,12 +48,13 @@ pub fn handle_mode_input(mode: &mut Mode, event: InputEvent, components: &mut [C
 fn handle_prompt_input(event: InputEvent, component: &mut Component) -> Action {
     if let InputEvent::Key(key_event) = event {
         use crossterm::event::KeyCode::*;
-        let prompt_action = component.prompt_action.as_ref().expect("Prompt component must have prompt_action");
-        
+        let prompt_action = component
+            .prompt_action
+            .as_ref()
+            .expect("Prompt component must have prompt_action");
+
         match key_event.code {
-            Esc => {
-                Action::ExecutePrompt(prompt_action.clone(), Some("n".to_string()))
-            }
+            Esc => Action::ExecutePrompt(prompt_action.clone(), Some("n".to_string())),
             Char('y') | Char('Y') => {
                 if let PromptAction::ConfirmSaveAs(_, _) = prompt_action {
                     handle_prompt_text_input(component, 'y')
@@ -65,7 +71,10 @@ fn handle_prompt_input(event: InputEvent, component: &mut Component) -> Action {
             }
             Enter => {
                 if let PromptAction::ConfirmSaveAs(_, _) = prompt_action {
-                    let text = component.content[0].strip_prefix("Save as: ").unwrap_or(&component.content[0]).to_string();
+                    let text = component.content[0]
+                        .strip_prefix("Save as: ")
+                        .unwrap_or(&component.content[0])
+                        .to_string();
                     Action::ExecutePrompt(prompt_action.clone(), Some(text))
                 } else {
                     Action::ExecutePrompt(prompt_action.clone(), Some("y".to_string()))

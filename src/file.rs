@@ -18,12 +18,13 @@ pub fn open_file(file: &str) -> Result<String, Box<dyn Error>> {
 
 pub fn save_file(file: &str, content: &[String]) -> Result<(), Box<dyn Error>> {
     let path = Path::new(file);
-    
+
     // Create directory if it doesn't exist
-    if let Some(parent) = path.parent() {
-        if !parent.exists() && !parent.as_os_str().is_empty() {
-            fs::create_dir_all(parent)?;
-        }
+    if let Some(parent) = path.parent()
+        && !parent.exists()
+        && !parent.as_os_str().is_empty()
+    {
+        fs::create_dir_all(parent)?;
     }
 
     let mut f = File::create(file)?;

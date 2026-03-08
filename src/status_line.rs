@@ -107,8 +107,8 @@ fn format_status_line(
     term_w: u16,
 ) -> String {
     use chrono::Local;
-    use unicode_width::UnicodeWidthStr;
     use std::sync::OnceLock;
+    use unicode_width::UnicodeWidthStr;
 
     static USER_CACHE: OnceLock<String> = OnceLock::new();
     static HOST_CACHE: OnceLock<String> = OnceLock::new();
@@ -116,7 +116,7 @@ fn format_status_line(
     let mode_str = format!("{:?}", mode).to_uppercase();
     let time_str = Local::now().format("%H:%M").to_string();
     let date_str = Local::now().format("%Y-%m-%d").to_string();
-    
+
     let user_str = USER_CACHE.get_or_init(|| {
         std::env::var("USER")
             .or_else(|_| std::env::var("USERNAME"))
@@ -210,7 +210,11 @@ fn format_status_line(
         "{}{}{}{}{}",
         left,
         " ".repeat(space1_len),
-        if center_end > center_start { &center } else { "" },
+        if center_end > center_start {
+            &center
+        } else {
+            ""
+        },
         " ".repeat(space2_len),
         right
     )

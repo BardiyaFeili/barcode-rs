@@ -1,4 +1,3 @@
-use crate::{args::parse_args, run::run};
 use crossterm::{
     cursor,
     event::{DisableMouseCapture, EnableMouseCapture},
@@ -10,22 +9,7 @@ use std::{
     io::{Write, stdout},
 };
 
-mod action;
-mod args;
-mod command;
-mod component;
-mod config;
-mod file;
-mod input;
-mod log;
-mod modal;
-mod notification;
-mod render;
-mod run;
-mod status_line;
-mod theme;
-mod window;
-mod highlight;
+use barcode::{parse_args, run};
 
 struct TerminalGuard;
 

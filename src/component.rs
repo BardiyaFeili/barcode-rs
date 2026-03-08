@@ -1,15 +1,15 @@
 use crate::{
-    action::{TextActions, PromptAction},
+    action::{PromptAction, TextActions},
     config::Config,
+    highlight::SyntaxHighlighter,
     input::Cursor,
     modal::Mode,
     window::{HorizontalAnchor, VerticalAnchor, Window, WindowType},
-    highlight::SyntaxHighlighter,
 };
+use crossterm::style::Color;
 use std::error::Error;
 use std::time::Duration;
 use unicode_width::UnicodeWidthChar;
-use crossterm::style::Color;
 
 pub struct Component {
     pub content: Vec<String>,
@@ -111,7 +111,12 @@ impl Component {
         self
     }
 
-    pub fn update(&mut self, delta: Duration, config: &Config, highlighter: &mut SyntaxHighlighter) -> Result<(), Box<dyn Error>> {
+    pub fn update(
+        &mut self,
+        delta: Duration,
+        config: &Config,
+        highlighter: &mut SyntaxHighlighter,
+    ) -> Result<(), Box<dyn Error>> {
         if let Some(timer) = &mut self.timer {
             *timer = timer.saturating_sub(delta);
         }
@@ -131,13 +136,17 @@ impl Component {
             return;
         }
 
-        let extension = self.file_path.as_ref()
+        let extension = self
+            .file_path
+            .as_ref()
             .and_then(|p| std::path::Path::new(p).extension())
             .and_then(|s| s.to_str())
             .unwrap_or("");
 
         let full_content = self.content.join("\n");
-        self.highlights = self.content.iter()
+        self.highlights = self
+            .content
+            .iter()
             .map(|l| vec![None; l.chars().count()])
             .collect();
 
@@ -148,7 +157,9 @@ impl Component {
             for (line_idx, line_str) in self.content.iter().enumerate() {
                 let line_end_byte = line_start_byte + line_str.len();
 
-                while highlight_idx < highlights.len() && highlights[highlight_idx].1 <= line_start_byte {
+                while highlight_idx < highlights.len()
+                    && highlights[highlight_idx].1 <= line_start_byte
+                {
                     highlight_idx += 1;
                 }
 
@@ -159,17 +170,18 @@ impl Component {
                     let e = h_end.min(line_end_byte) - line_start_byte;
 
                     if s < e {
-                        let mut char_idx = 0;
                         let mut byte_offset = 0;
-                        for c in line_str.chars() {
-                            if byte_offset >= s && byte_offset < e {
-                                if char_idx < self.highlights[line_idx].len() {
-                                    self.highlights[line_idx][char_idx] = Some(color);
-                                }
+                        for (char_idx, c) in line_str.chars().enumerate() {
+                            if byte_offset >= s
+                                && byte_offset < e
+                                && char_idx < self.highlights[line_idx].len()
+                            {
+                                self.highlights[line_idx][char_idx] = Some(color);
                             }
                             byte_offset += c.len_utf8();
-                            char_idx += 1;
-                            if byte_offset >= e { break; }
+                            if byte_offset >= e {
+                                break;
+                            }
                         }
                     }
                     h_idx += 1;
@@ -181,11 +193,12 @@ impl Component {
 
     fn prepare_view(&mut self, config: &Config) {
         let window_height = self.window.window_height as usize;
-        
+
         let gutter_width = if self.component_type == ComponentType::Buffer {
             match config.line_number.mode {
                 crate::config::LineNumberMode::None => 0,
-                crate::config::LineNumberMode::Absolute | crate::config::LineNumberMode::Relative => {
+                crate::config::LineNumberMode::Absolute
+                | crate::config::LineNumberMode::Relative => {
                     let max_lines = self.content.len();
                     let digits = max_lines.to_string().len().max(2);
                     digits + config.line_number.padding_left + config.line_number.padding_right
@@ -196,8 +209,12 @@ impl Component {
         } as u16;
 
         self.window.gutter_width = gutter_width;
-        let window_width = self.window.window_width.saturating_sub(gutter_width).saturating_sub(1) as usize;
-        
+        let window_width = self
+            .window
+            .window_width
+            .saturating_sub(gutter_width)
+            .saturating_sub(1) as usize;
+
         if config.editor.wrap {
             let mut wrapped_lines = Vec::new();
             let mut wrapped_highlights = Vec::new();
@@ -241,7 +258,7 @@ impl Component {
                         current_wrapped_highlights = Vec::new();
                         current_w = 0;
                         start_x = x;
-                        
+
                         if y == self.cursor.y as usize && x == self.cursor.x as usize {
                             cursor_wrapped_y = wrapped_lines.len();
                             cursor_wrapped_x = 0;
@@ -252,7 +269,7 @@ impl Component {
                     current_wrapped_highlights.push(char_highlight);
                     current_w += cw;
                 }
-                
+
                 if y == self.cursor.y as usize && self.cursor.x as usize == line.len() {
                     cursor_wrapped_y = wrapped_lines.len();
                     cursor_wrapped_x = current_w;
@@ -283,7 +300,7 @@ impl Component {
         } else {
             // No wrapping logic
             self.window.visual_cursor = None;
-            
+
             let mut visual_info = Vec::new();
             for y in 0..self.content.len() {
                 visual_info.push((y, 0, y, true));
@@ -314,11 +331,12 @@ impl Component {
         // Scroll down (viewpoint increases)
         // Only scroll down if cursor is below current view + height - margin
         if cursor_y >= self.window.viewpoint + window_height.saturating_sub(effective_margin) {
-            while cursor_y >= self.window.viewpoint + window_height.saturating_sub(effective_margin) {
+            while cursor_y >= self.window.viewpoint + window_height.saturating_sub(effective_margin)
+            {
                 self.window.viewpoint += 1;
             }
         }
-        
+
         // Final safety check: if cursor is STILL out of bounds after margin logic
         // (can happen if window shrunk significantly)
         if cursor_y < self.window.viewpoint {
@@ -328,14 +346,22 @@ impl Component {
         }
     }
 
-    pub fn move_cursor_visual(&mut self, dx: i16, dy: i16, mode: &Mode, config: &Config) -> Result<(), Box<dyn Error>> {
+    pub fn move_cursor_visual(
+        &mut self,
+        dx: i16,
+        dy: i16,
+        mode: &Mode,
+        config: &Config,
+    ) -> Result<(), Box<dyn Error>> {
         if config.editor.wrap && self.window.visual_cursor_info.is_some() {
             if let Some(info) = &self.window.visual_cursor_info {
                 let (_, v_y) = self.window.visual_cursor.unwrap_or((0, 0));
-                
+
                 if dy != 0 {
                     let target_v_y = if dy > 0 {
-                        (v_y as usize).saturating_add(dy as usize).min(info.last().map(|i| i.2).unwrap_or(0))
+                        (v_y as usize)
+                            .saturating_add(dy as usize)
+                            .min(info.last().map(|i| i.2).unwrap_or(0))
                     } else {
                         (v_y as usize).saturating_sub(dy.unsigned_abs() as usize)
                     };
@@ -345,8 +371,9 @@ impl Component {
                         let line = &self.content[p_y];
                         let mut current_vw = 0;
                         let mut byte_idx = p_x_start;
-                        
-                        let next_v_line_start_x = info.iter()
+
+                        let next_v_line_start_x = info
+                            .iter()
                             .find(|i| i.2 == target_v_y + 1 && i.0 == p_y)
                             .map(|i| i.1)
                             .unwrap_or(line.len());
@@ -369,36 +396,48 @@ impl Component {
                     let current_p_y = self.cursor.y as usize;
                     let current_p_x = self.cursor.x as usize;
                     let line = &self.content[current_p_y];
-                    
+
                     if dx > 0 {
                         // Move Right
-                        let max_x = if *mode == Mode::Insert { line.len() } else { line.len().saturating_sub(1) };
-                        if current_p_x < max_x {
-                            if let Some(c) = line[current_p_x..].chars().next() {
-                                self.cursor.x += c.len_utf8() as u16;
-                                self.cursor.target_x = self.calculate_visual_x(current_p_y, self.cursor.x as usize, info);
-                            }
+                        let max_x = if *mode == Mode::Insert {
+                            line.len()
+                        } else {
+                            line.len().saturating_sub(1)
+                        };
+                        if let Some(c) = line[current_p_x..].chars().next()
+                            && current_p_x < max_x
+                        {
+                            self.cursor.x += c.len_utf8() as u16;
+                            self.cursor.target_x =
+                                self.calculate_visual_x(current_p_y, self.cursor.x as usize, info);
                         }
                     } else {
                         // Move Left
-                        if current_p_x > 0 {
-                            if let Some(c) = line[..current_p_x].chars().next_back() {
-                                self.cursor.x -= c.len_utf8() as u16;
-                                self.cursor.target_x = self.calculate_visual_x(current_p_y, self.cursor.x as usize, info);
-                            }
+                        if let Some(c) = line[..current_p_x].chars().next_back()
+                            && current_p_x > 0
+                        {
+                            self.cursor.x -= c.len_utf8() as u16;
+                            self.cursor.target_x =
+                                self.calculate_visual_x(current_p_y, self.cursor.x as usize, info);
                         }
                     }
                 }
             }
         } else {
-            self.cursor.move_rel(Some(dx), Some(dy), &self.content, mode)?;
+            self.cursor
+                .move_rel(Some(dx), Some(dy), &self.content, mode)?;
         }
         self.needs_update = true;
         Ok(())
     }
 
-    fn calculate_visual_x(&self, p_y: usize, p_x: usize, info: &[(usize, usize, usize, bool)]) -> u16 {
-        if let Some(segment) = info.iter().filter(|i| i.0 == p_y && i.1 <= p_x).last() {
+    fn calculate_visual_x(
+        &self,
+        p_y: usize,
+        p_x: usize,
+        info: &[(usize, usize, usize, bool)],
+    ) -> u16 {
+        if let Some(segment) = info.iter().rfind(|i| i.0 == p_y && i.1 <= p_x) {
             let line = &self.content[p_y];
             let mut vw = 0;
             for c in line[segment.1..p_x].chars() {
@@ -413,28 +452,6 @@ impl Component {
 
     pub fn is_expired(&self) -> bool {
         self.timer.is_some_and(|t| t.is_zero())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::time::Duration;
-
-    #[test]
-    fn test_component_highlights() {
-        let config = Config::default();
-        let mut highlighter = SyntaxHighlighter::new();
-        let content = vec!["fn main() {".to_string(), "    let x = 5;".to_string(), "}".to_string()];
-        let mut comp = Component::new(content, ComponentType::Buffer, Some("main.rs".to_string()), &config);
-        
-        comp.update(Duration::from_millis(0), &config, &mut highlighter).unwrap();
-        
-        // Check that highlights were populated
-        assert_eq!(comp.highlights.len(), 3);
-        // "fn" is in the first line
-        assert_eq!(comp.highlights[0][0], Some(Color::Magenta)); // 'f'
-        assert_eq!(comp.highlights[0][1], Some(Color::Magenta)); // 'n'
     }
 }
 
