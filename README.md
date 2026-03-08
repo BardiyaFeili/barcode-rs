@@ -1,48 +1,40 @@
-# Barcode — a TUI Code Editor
+# Barcode
 
-Barcode is a simple, modal terminal code editor written in Rust.
+Barcode is a modal, terminal-based code editor written in Rust.
 
-This project is still very much a work in progress.
+## The Basics
 
-## Features
+- **Modal Editing:** If you've used Vim, you'll feel at home. It’s got Normal, Insert, and Command modes.
+- **Tree-sitter Support:** Fast and accurate syntax highlighting that actually understands your code's structure.
+- **Split Windows:** Open multiple files and tile them however you want.
+- **Lightweight:** It starts up instantly because it doesn't have 500 MB of telemetry attached.
+- **Configurable:** Tweak your colors, line numbers, and behavior in `config.toml`.
 
-- Modal editing (Vim-inspired)
-- Multiple tabs
-- Fast and lightweight
-- Cross-platform
-- Built with extensibility in mind
+## Getting Started
 
-## Why it’s minimal right now
+You'll need a working Rust toolchain. Then just:
 
-Many features you would normally expect from an editor (syntax highlighting, plugins, LSP, etc.) are intentionally not implemented yet.
+```bash
+git clone https://github.com/yourusername/barcode-rs
+cd barcode-rs
+cargo run --release
+```
 
-So far, the focus has been on:
+To open specific files, just pass them as arguments:
 
-- Getting the core architecture right
-- Keeping the codebase simple and modular
-- Making future features easy to add and fast to implement
+```bash
+cargo run -- src/main.rs src/lib.rs
+```
 
-This should allow new functionality to be added later with minimal refactoring.
+## How to use it (for now)
 
-## Building and running
+- `i`: Enter **Insert mode** to actually type things.
+- `Esc`: Back to **Normal mode**.
+- `:`: Enter **Command mode**.
+  - `:w`: Save the current file.
+  - `:q`: Quit the current buffer.
+  - `:wq`: Save and quit.
+  - `:n`: Create a new empty buffer.
+  - `:e <path>`: Open a file.
 
-Clone the repository and run:
-
-    cargo build --release
-    cargo run --release
-
-## Usage
-
-- Press `i` to enter Insert mode
-- Other commands and modes are still under development
-
-## Configuration
-
-Barcode is highly configurable. See [CONFIG.md](CONFIG.md) for details on available options and configuration paths.
-
-## Planned features
-
-- Syntax highlighting
-- Plugin system
-- LSP support
-- Configurable keybindings
+Check out [CONFIG.md](CONFIG.md) to see Configuration options.
