@@ -1,5 +1,6 @@
 use crate::args::Args;
 use crate::log::log;
+use crate::theme::Theme;
 use crate::window::{BorderStyle, HorizontalAnchor, VerticalAnchor};
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -14,10 +15,58 @@ pub struct Config {
     pub status_line: StatusLineConfig,
     pub notification: NotificationConfig,
     pub input: InputConfig,
+    pub editor: EditorConfig,
+    pub line_number: LineNumberConfig,
+    pub theme: Theme,
     #[serde(skip)]
     pub keymap_path: Option<PathBuf>,
     #[serde(skip)]
     pub theme_path: Option<PathBuf>,
+}
+
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum LineNumberMode {
+    None,
+    Absolute,
+    #[default]
+    Relative,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(default)]
+pub struct EditorConfig {
+    pub margin: usize,
+    pub wrap: bool,
+    pub line_indicator: bool,
+}
+
+impl Default for EditorConfig {
+    fn default() -> Self {
+        Self {
+            margin: 3,
+            wrap: true,
+            line_indicator: true,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(default)]
+pub struct LineNumberConfig {
+    pub mode: LineNumberMode,
+    pub padding_left: usize,
+    pub padding_right: usize,
+}
+
+impl Default for LineNumberConfig {
+    fn default() -> Self {
+        Self {
+            mode: LineNumberMode::Relative,
+            padding_left: 3,
+            padding_right: 3,
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -138,6 +187,9 @@ pub fn resolve_config_files(args: &Args) -> Result<Config, Box<dyn Error>> {
     }
     if let Some(path) = &config.theme_path {
         log(format!("Theme file found: {:?}", path))?;
+        let content = fs::read_to_string(path)?;
+        log(format!("Loading theme from {:?}", path))?;
+        config.theme = toml::from_str(&content)?;
     }
 
     Ok(config)

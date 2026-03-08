@@ -13,7 +13,10 @@ use crate::{
     modal::{Mode, handle_mode_input},
     render::render,
     status_line::update_status_line,
+    window::{recalculate_layouts, remove_component},
 };
+
+use crate::highlight::SyntaxHighlighter;
 
 pub struct Editor {
     pub mode: Mode,
@@ -22,13 +25,14 @@ pub struct Editor {
     pub active_components: Vec<Component>,
     pub focused_idx: usize,
     pub last_status_update: Instant,
+    pub highlighter: SyntaxHighlighter,
 }
 
 impl Editor {
     pub fn new(args: Args) -> Result<Self, Box<dyn Error>> {
         let config = resolve_config_files(&args)?;
         let mut active_components = Vec::new();
-        let last_count = startup(&args, &mut active_components)?;
+        let last_count = startup(&args, &mut active_components, &config)?;
 
         let mut focused_idx = last_count.saturating_sub(1);
 
@@ -42,7 +46,7 @@ impl Editor {
         // Add status line if enabled
         if config.status_line.enabled {
             let mut status_line =
-                Component::new(vec![String::new()], ComponentType::StatusLine, None);
+                Component::new(vec![String::new()], ComponentType::StatusLine, None, &config);
             status_line.window.window_height = 1;
             active_components.push(status_line);
         }
@@ -54,11 +58,14 @@ impl Editor {
             active_components,
             focused_idx,
             last_status_update: Instant::now() - Duration::from_secs(60),
+            highlighter: SyntaxHighlighter::new(),
         })
     }
 
     pub fn update(&mut self, delta: Duration) -> Result<bool, Box<dyn Error>> {
         let mut should_redraw = false;
+
+        recalculate_layouts(&mut self.active_components)?;
 
         // Only update status line if enabled and some time has passed, or if something changed.
         let needs_status_update = (self.mode != self.last_mode) || self.active_components.get(self.focused_idx)
@@ -79,17 +86,12 @@ impl Editor {
 
         // Update all components and remove expired ones
         let mut i = 0;
+        let highlighter = &mut self.highlighter;
         while i < self.active_components.len() {
-            self.active_components[i].update(delta)?;
+            self.active_components[i].update(delta, &self.config, highlighter)?;
             if self.active_components[i].is_expired() {
-                self.active_components.remove(i);
+                remove_component(&mut self.active_components, &mut self.focused_idx, i);
                 should_redraw = true;
-                // Adjust focus if needed
-                if self.focused_idx >= self.active_components.len()
-                    && !self.active_components.is_empty()
-                {
-                    self.focused_idx = self.active_components.len() - 1;
-                }
             } else {
                 if self.active_components[i].needs_update {
                     should_redraw = true;
@@ -141,7 +143,7 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
 
         if crossterm::event::poll(timeout)? {
             let old_mode = editor.mode;
-            let action = handle_mode_input(&mut editor.mode, read_input()?);
+            let action = handle_mode_input(&mut editor.mode, read_input()?, &mut editor.active_components, editor.focused_idx);
 
             if editor.mode != old_mode {
                 log(format!("Mode change: {:?} -> {:?}", old_mode, editor.mode))?;
@@ -159,7 +161,7 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
                 )?,
             }
 
-            if editor.active_components.is_empty() {
+            if !editor.active_components.iter().any(|c| c.component_type == ComponentType::Buffer) {
                 break;
             }
             needs_redraw = true;
@@ -174,7 +176,7 @@ fn terminal_width() -> Result<u16, Box<dyn Error>> {
     Ok(w)
 }
 
-fn startup(args: &Args, active_components: &mut Vec<Component>) -> Result<usize, Box<dyn Error>> {
+fn startup(args: &Args, active_components: &mut Vec<Component>, config: &crate::config::Config) -> Result<usize, Box<dyn Error>> {
     log_startup("Barcode", "pre-alpha")?;
 
     for file in &args.files {
@@ -187,6 +189,7 @@ fn startup(args: &Args, active_components: &mut Vec<Component>) -> Result<usize,
             content,
             ComponentType::Buffer,
             Some(file.clone()),
+            config,
         ));
     }
 

@@ -1,6 +1,7 @@
 use crate::{
-    action::{Action, CursorActions, TextActions, WindowActions},
+    action::{Action, CursorActions, TextActions, WindowActions, PromptAction},
     input::InputEvent,
+    component::Component,
 };
 use std::sync::Mutex;
 
@@ -15,7 +16,14 @@ pub enum Mode {
 static INPUT_BUFFER: Mutex<String> = Mutex::new(String::new());
 
 /// The “mother” function — routes input to the right mode handler.
-pub fn handle_mode_input(mode: &mut Mode, event: InputEvent) -> Action {
+pub fn handle_mode_input(mode: &mut Mode, event: InputEvent, components: &mut [Component], focused_idx: usize) -> Action {
+    if focused_idx < components.len() {
+        let component = &mut components[focused_idx];
+        if component.prompt_action.is_some() {
+            return handle_prompt_input(event, component);
+        }
+    }
+
     let action = match mode {
         Mode::Normal => handle_normal_mode(event),
         Mode::Insert => handle_insert_mode(event),
@@ -30,6 +38,69 @@ pub fn handle_mode_input(mode: &mut Mode, event: InputEvent) -> Action {
     }
 
     action
+}
+
+fn handle_prompt_input(event: InputEvent, component: &mut Component) -> Action {
+    if let InputEvent::Key(key_event) = event {
+        use crossterm::event::KeyCode::*;
+        let prompt_action = component.prompt_action.as_ref().expect("Prompt component must have prompt_action");
+        
+        match key_event.code {
+            Esc => {
+                Action::ExecutePrompt(prompt_action.clone(), Some("n".to_string()))
+            }
+            Char('y') | Char('Y') => {
+                if let PromptAction::ConfirmSaveAs(_, _) = prompt_action {
+                    handle_prompt_text_input(component, 'y')
+                } else {
+                    Action::ExecutePrompt(prompt_action.clone(), Some("y".to_string()))
+                }
+            }
+            Char('n') | Char('N') => {
+                if let PromptAction::ConfirmSaveAs(_, _) = prompt_action {
+                    handle_prompt_text_input(component, 'n')
+                } else {
+                    Action::ExecutePrompt(prompt_action.clone(), Some("n".to_string()))
+                }
+            }
+            Enter => {
+                if let PromptAction::ConfirmSaveAs(_, _) = prompt_action {
+                    let text = component.content[0].strip_prefix("Save as: ").unwrap_or(&component.content[0]).to_string();
+                    Action::ExecutePrompt(prompt_action.clone(), Some(text))
+                } else {
+                    Action::ExecutePrompt(prompt_action.clone(), Some("y".to_string()))
+                }
+            }
+            Backspace => {
+                if let PromptAction::ConfirmSaveAs(_, _) = prompt_action {
+                    let prefix = "Save as: ";
+                    if component.content[0].len() > prefix.len() {
+                        component.content[0].pop();
+                        component.cursor.x = component.content[0].len() as u16;
+                        component.needs_update = true;
+                    }
+                }
+                Action::None
+            }
+            Char(c) => {
+                if let PromptAction::ConfirmSaveAs(_, _) = prompt_action {
+                    handle_prompt_text_input(component, c)
+                } else {
+                    Action::None
+                }
+            }
+            _ => Action::None,
+        }
+    } else {
+        Action::None
+    }
+}
+
+fn handle_prompt_text_input(component: &mut Component, c: char) -> Action {
+    component.content[0].push(c);
+    component.cursor.x = component.content[0].len() as u16;
+    component.needs_update = true;
+    Action::None
 }
 
 fn handle_normal_mode(event: InputEvent) -> Action {

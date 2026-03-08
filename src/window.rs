@@ -2,7 +2,7 @@ use std::error::Error;
 use crossterm::{terminal, style::Color};
 use serde::Deserialize;
 
-use crate::{action::WindowActions, component::Component};
+use crate::{action::WindowActions, component::{Component, ComponentType}};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 pub enum WindowType {
@@ -41,30 +41,19 @@ pub enum VerticalAnchor {
     Bottom,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct WindowColors {
-    pub border_fg: Color,
+    pub border_fg: Option<Color>,
     pub border_bg: Option<Color>,
-    pub content_fg: Color,
+    pub content_fg: Option<Color>,
     pub content_bg: Option<Color>,
-}
-
-impl Default for WindowColors {
-    fn default() -> Self {
-        Self {
-            border_fg: Color::White,
-            border_bg: None,
-            content_fg: Color::Reset,
-            content_bg: None,
-        }
-    }
 }
 
 #[derive(Debug)]
 pub struct Window {
     pub content: Vec<String>,
+    pub highlights: Vec<Vec<Option<Color>>>,
     pub width: Option<u16>,
-    pub height: Option<u16>,
     pub window_width: u16,
     pub window_height: u16,
     pub flexible_x: bool,
@@ -75,6 +64,9 @@ pub struct Window {
     pub v_anchor: VerticalAnchor,
     pub hidden: bool,
     pub viewpoint: usize,
+    pub gutter_width: u16,
+    pub visual_cursor: Option<(u16, u16)>,
+    pub visual_cursor_info: Option<Vec<(usize, usize, usize, bool)>>, // (physical_y, physical_x, visual_y, is_first)
     // Floating specific
     pub x: u16,
     pub y: u16,
@@ -105,8 +97,8 @@ impl Window {
         }
         Ok(Self {
             content,
+            highlights: Vec::new(),
             width,
-            height,
             window_width: terminal_width,
             window_height: terminal_height,
             flexible_x,
@@ -116,6 +108,9 @@ impl Window {
             v_anchor,
             hidden,
             viewpoint,
+            gutter_width: 0,
+            visual_cursor: None,
+            visual_cursor_info: None,
             x: 0,
             y: 0,
             border_style: BorderStyle::None,
@@ -156,6 +151,127 @@ impl Window {
         };
 
         (x, y)
+    }
+}
+
+pub fn recalculate_layouts(components: &mut [Component]) -> Result<(), Box<dyn Error>> {
+    let (terminal_width, terminal_height) = terminal::size()?;
+
+    let mut tiled_center = Vec::new();
+    let mut status_line_exists = false;
+    
+    // For now we only handle Center tiled windows and StatusLine
+    for component in components.iter_mut() {
+        if component.window.hidden { continue; }
+        if component.component_type == ComponentType::StatusLine {
+            status_line_exists = true;
+            continue;
+        }
+        if component.window.window_type == WindowType::Tile && component.window.v_anchor == VerticalAnchor::Center {
+            tiled_center.push(component);
+        }
+    }
+
+    let mut center_height = terminal_height;
+    if status_line_exists {
+        center_height = center_height.saturating_sub(1);
+    }
+
+    let mut center_flexible_width = terminal_width;
+    for component in &tiled_center {
+        if !component.window.flexible_x {
+            center_flexible_width = center_flexible_width.saturating_sub(component.window.width.unwrap_or(0));
+        }
+    }
+
+    let center_flexible_window_width = if tiled_center.is_empty() {
+        center_flexible_width
+    } else {
+        let flex_count = tiled_center.iter().filter(|c| c.window.flexible_x).count();
+        if flex_count > 0 {
+            center_flexible_width / flex_count as u16
+        } else {
+            0
+        }
+    };
+
+    let mut distributed_width = 0;
+    let flex_indices: Vec<usize> = tiled_center.iter().enumerate()
+        .filter(|(_, c)| c.window.flexible_x)
+        .map(|(i, _)| i)
+        .collect();
+
+    for (idx, component) in tiled_center.iter_mut().enumerate() {
+        component.window.window_height = center_height;
+        let old_w = component.window.window_width;
+        let old_h = component.window.window_height;
+
+        if component.window.flexible_x {
+            if Some(&idx) == flex_indices.last() {
+                // Last flexible window gets the remaining width
+                component.window.window_width = center_flexible_width.saturating_sub(distributed_width);
+            } else {
+                component.window.window_width = center_flexible_window_width;
+                distributed_width = distributed_width.saturating_add(center_flexible_window_width);
+            }
+        } else {
+            component.window.window_width = component.window.width.unwrap_or(0);
+            distributed_width = distributed_width.saturating_add(component.window.window_width);
+        }
+
+        if old_w != component.window.window_width || old_h != component.window.window_height {
+            component.needs_update = true;
+        }
+    }
+
+    Ok(())
+}
+
+pub fn remove_component(components: &mut Vec<Component>, focused_idx: &mut usize, target_idx: usize) {
+    if target_idx < components.len() {
+        components.remove(target_idx);
+        
+        if components.is_empty() {
+            *focused_idx = 0;
+            return;
+        }
+
+        // Adjust focused_idx if it was pointing at or after the removed component
+        if *focused_idx >= target_idx && *focused_idx > 0 {
+            *focused_idx -= 1;
+        }
+
+        // Cap focused_idx at max index
+        if *focused_idx >= components.len() {
+            *focused_idx = components.len() - 1;
+        }
+
+        // Ensure focused index is focusable. 
+        // When we remove a component (especially the command bar), 
+        // we usually want to go BACKWARDS to find the last focused buffer.
+        let start_idx = *focused_idx;
+        while !components[*focused_idx].focusable {
+            if *focused_idx > 0 {
+                *focused_idx -= 1;
+            } else {
+                // If we hit 0 and it's not focusable, look forwards
+                let mut found = false;
+                for (i, c) in components.iter().enumerate() {
+                    if c.focusable {
+                        *focused_idx = i;
+                        found = true;
+                        break;
+                    }
+                }
+                if !found {
+                    *focused_idx = 0; // No focusable components
+                }
+                break;
+            }
+            if *focused_idx == start_idx {
+                break;
+            }
+        }
     }
 }
 

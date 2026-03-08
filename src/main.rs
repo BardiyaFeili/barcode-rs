@@ -19,10 +19,13 @@ mod file;
 mod input;
 mod log;
 mod modal;
+mod notification;
 mod render;
 mod run;
 mod status_line;
+mod theme;
 mod window;
+mod highlight;
 
 struct TerminalGuard;
 
