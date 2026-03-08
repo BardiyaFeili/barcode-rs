@@ -2,6 +2,8 @@
 
 Barcode is a modal, terminal-based code editor written in Rust.
 
+<img width="2400" height="1350" alt="image" src="https://github.com/user-attachments/assets/da63230d-42c4-4e44-958f-4acbaff85207" />
+
 ## The Basics
 
 - **Modal Editing:** If you've used Vim, you'll feel at home. It’s got Normal, Insert, and Command modes.
