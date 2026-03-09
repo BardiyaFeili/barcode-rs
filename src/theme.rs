@@ -50,7 +50,7 @@ impl Default for Theme {
             gutter_fg: Color::Grey,
             gutter_active_fg: Color::Yellow,
             gutter_bg: None,
-            line_indicator_bg: Some(Color::Grey),
+            line_indicator_bg: Some(Color::DarkGrey),
         }
     }
 }
