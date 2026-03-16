@@ -1,36 +1,36 @@
 use crossterm::style::Color;
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-#[derive(Debug, Deserialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
 #[serde(default)]
 pub struct Theme {
-    #[serde(deserialize_with = "de_color_opt")]
+    #[serde(deserialize_with = "de_color_opt", serialize_with = "ser_color_opt")]
     pub bg: Option<Color>,
-    #[serde(deserialize_with = "de_color")]
+    #[serde(deserialize_with = "de_color", serialize_with = "ser_color")]
     pub fg: Color,
-    #[serde(deserialize_with = "de_color")]
+    #[serde(deserialize_with = "de_color", serialize_with = "ser_color")]
     pub border: Color,
-    #[serde(deserialize_with = "de_color")]
+    #[serde(deserialize_with = "de_color", serialize_with = "ser_color")]
     pub status_bg: Color,
-    #[serde(deserialize_with = "de_color")]
+    #[serde(deserialize_with = "de_color", serialize_with = "ser_color")]
     pub status_fg: Color,
-    #[serde(deserialize_with = "de_color")]
+    #[serde(deserialize_with = "de_color", serialize_with = "ser_color")]
     pub accent: Color,
-    #[serde(deserialize_with = "de_color")]
+    #[serde(deserialize_with = "de_color", serialize_with = "ser_color")]
     pub selection_bg: Color,
-    #[serde(deserialize_with = "de_color")]
+    #[serde(deserialize_with = "de_color", serialize_with = "ser_color")]
     pub selection_fg: Color,
-    #[serde(deserialize_with = "de_color")]
+    #[serde(deserialize_with = "de_color", serialize_with = "ser_color")]
     pub cursor_bg: Color,
-    #[serde(deserialize_with = "de_color")]
+    #[serde(deserialize_with = "de_color", serialize_with = "ser_color")]
     pub cursor_fg: Color,
-    #[serde(deserialize_with = "de_color")]
+    #[serde(deserialize_with = "de_color", serialize_with = "ser_color")]
     pub gutter_fg: Color,
-    #[serde(deserialize_with = "de_color")]
+    #[serde(deserialize_with = "de_color", serialize_with = "ser_color")]
     pub gutter_active_fg: Color,
-    #[serde(deserialize_with = "de_color_opt")]
+    #[serde(deserialize_with = "de_color_opt", serialize_with = "ser_color_opt")]
     pub gutter_bg: Option<Color>,
-    #[serde(deserialize_with = "de_color_opt")]
+    #[serde(deserialize_with = "de_color_opt", serialize_with = "ser_color_opt")]
     pub line_indicator_bg: Option<Color>,
 }
 
@@ -105,5 +105,43 @@ where
         Some(s) if s.to_lowercase() == "reset" || s.to_lowercase() == "none" => Ok(None),
         Some(s) => parse_color(&s).map(Some).map_err(serde::de::Error::custom),
         None => Ok(None),
+    }
+}
+
+pub fn ser_color<S>(color: &Color, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    let s = match color {
+        Color::Reset => "reset".to_string(),
+        Color::Black => "black".to_string(),
+        Color::DarkGrey => "darkgrey".to_string(),
+        Color::Red => "red".to_string(),
+        Color::DarkRed => "darkred".to_string(),
+        Color::Green => "green".to_string(),
+        Color::DarkGreen => "darkgreen".to_string(),
+        Color::Yellow => "yellow".to_string(),
+        Color::DarkYellow => "darkyellow".to_string(),
+        Color::Blue => "blue".to_string(),
+        Color::DarkBlue => "darkblue".to_string(),
+        Color::Magenta => "magenta".to_string(),
+        Color::DarkMagenta => "darkmagenta".to_string(),
+        Color::Cyan => "cyan".to_string(),
+        Color::DarkCyan => "darkcyan".to_string(),
+        Color::White => "white".to_string(),
+        Color::Grey => "grey".to_string(),
+        Color::Rgb { r, g, b } => format!("#{:02x}{:02x}{:02x}", r, g, b),
+        _ => "reset".to_string(),
+    };
+    serializer.serialize_str(&s)
+}
+
+pub fn ser_color_opt<S>(color: &Option<Color>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    match color {
+        Some(c) => ser_color(c, serializer),
+        None => serializer.serialize_str("none"),
     }
 }

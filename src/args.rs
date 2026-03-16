@@ -31,6 +31,10 @@ pub struct Args {
     /// Only run startup routines, then exit
     #[arg(long)]
     pub only_startup: bool,
+
+    /// Generate default configuration files in the specified directory
+    #[arg(long, value_name = "DIR", num_args = 0..=1)]
+    pub init: Option<Option<PathBuf>>,
 }
 
 pub fn parse_args() -> Args {

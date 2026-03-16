@@ -1,5 +1,5 @@
 use crossterm::{style::Color, terminal};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::error::Error;
 
 use crate::{
@@ -7,13 +7,13 @@ use crate::{
     component::{Component, ComponentType},
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 pub enum WindowType {
     Tile,
     Floating,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum BorderStyle {
     None,
@@ -22,7 +22,7 @@ pub enum BorderStyle {
     Rounded,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum HorizontalAnchor {
     #[serde(alias = "l")]
@@ -33,7 +33,7 @@ pub enum HorizontalAnchor {
     Right,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum VerticalAnchor {
     #[serde(alias = "t")]

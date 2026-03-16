@@ -9,7 +9,7 @@ use std::{
     io::{Write, stdout},
 };
 
-use barcode::{parse_args, run};
+use barcode::{config::generate_default_config, parse_args, run};
 
 struct TerminalGuard;
 
@@ -39,6 +39,11 @@ impl Drop for TerminalGuard {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = parse_args();
+
+    if let Some(init_dir) = args.init {
+        generate_default_config(init_dir)?;
+        return Ok(());
+    }
 
     let _guard = TerminalGuard::new()?;
 

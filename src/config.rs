@@ -2,14 +2,14 @@ use crate::args::Args;
 use crate::log::log;
 use crate::theme::Theme;
 use crate::window::{BorderStyle, HorizontalAnchor, VerticalAnchor};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
 use std::error::Error;
 use std::fs;
 use std::path::PathBuf;
 
-#[derive(Debug, Deserialize, Clone, Default)]
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
 #[serde(default)]
 pub struct Config {
     pub status_line: StatusLineConfig,
@@ -17,6 +17,7 @@ pub struct Config {
     pub input: InputConfig,
     pub editor: EditorConfig,
     pub line_number: LineNumberConfig,
+    #[serde(skip_serializing)]
     pub theme: Theme,
     #[serde(skip)]
     pub keymap_path: Option<PathBuf>,
@@ -24,7 +25,7 @@ pub struct Config {
     pub theme_path: Option<PathBuf>,
 }
 
-#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum LineNumberMode {
     None,
@@ -33,7 +34,7 @@ pub enum LineNumberMode {
     Relative,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(default)]
 pub struct EditorConfig {
     pub margin: usize,
@@ -51,7 +52,7 @@ impl Default for EditorConfig {
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(default)]
 pub struct LineNumberConfig {
     pub mode: LineNumberMode,
@@ -69,7 +70,7 @@ impl Default for LineNumberConfig {
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(default)]
 pub struct StatusLineConfig {
     pub enabled: bool,
@@ -93,7 +94,7 @@ impl Default for StatusLineConfig {
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(default)]
 pub struct NotificationConfig {
     pub enabled: bool,
@@ -115,7 +116,7 @@ impl Default for NotificationConfig {
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(default)]
 pub struct InputConfig {
     pub h_anchor: HorizontalAnchor,
@@ -228,4 +229,61 @@ fn resolve_config_paths(config_home: Option<PathBuf>) -> Result<Vec<PathBuf>, Bo
     paths.retain(|p| seen.insert(p.clone()));
 
     Ok(paths)
+}
+
+pub fn generate_default_config(dir: Option<PathBuf>) -> Result<(), Box<dyn Error>> {
+    let path = match dir {
+        Some(p) => p,
+        None => {
+            if let Ok(val) = env::var("XDG_CONFIG_HOME") {
+                PathBuf::from(val).join("barcode")
+            } else {
+                let path_str = shellexpand::tilde("~/.config/barcode").into_owned();
+                PathBuf::from(path_str)
+            }
+        }
+    };
+
+    if !path.exists() {
+        fs::create_dir_all(&path)?;
+    }
+
+    let config_path = path.join("config.toml");
+    let keymap_path = path.join("keymap.toml");
+    let theme_path = path.join("theme.toml");
+
+    let default_config = toml::to_string(&Config::default())?;
+
+    let default_keymap = r#"# Keymap file for Barcode
+# Currently, keybindings are hardcoded, but this file can be used for reference
+# and future customization.
+
+[normal]
+i = "insert_mode"
+v = "visual_mode"
+":" = "command_mode"
+q = "quit"
+h = "move_left"
+j = "move_down"
+k = "move_up"
+l = "move_right"
+
+[insert]
+esc = "normal_mode"
+
+[command]
+esc = "normal_mode"
+enter = "execute_command"
+"#;
+
+    let default_theme = toml::to_string(&Theme::default())?;
+
+    fs::write(&config_path, default_config)?;
+    println!("Generated {:?}", config_path);
+    fs::write(&keymap_path, default_keymap)?;
+    println!("Generated {:?}", keymap_path);
+    fs::write(&theme_path, default_theme)?;
+    println!("Generated {:?}", theme_path);
+
+    Ok(())
 }
