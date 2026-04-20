@@ -1,22 +1,22 @@
-use std::error::Error;
-use std::time::{Duration, Instant};
+use std::{
+    error::Error,
+    time::{Duration, Instant},
+};
 
-use crate::log::log;
 use crate::{
     action::{Action, take_action},
     args::Args,
     component::{Component, ComponentType},
     config::resolve_config_files,
     file::open_file,
+    highlight::SyntaxHighlighter,
     input::read_input,
-    log::log_startup,
+    log::{log, log_startup},
     modal::{Mode, handle_mode_input},
     render::render,
     status_line::update_status_line,
     window::{recalculate_layouts, remove_component},
 };
-
-use crate::highlight::SyntaxHighlighter;
 
 pub struct Editor {
     pub mode: Mode,
@@ -45,8 +45,12 @@ impl Editor {
 
         // Add status line if enabled
         if config.status_line.enabled {
-            let mut status_line =
-                Component::new(vec![String::new()], ComponentType::StatusLine, None, &config);
+            let mut status_line = Component::new(
+                vec![String::new()],
+                ComponentType::StatusLine,
+                None,
+                &config,
+            );
             status_line.window.window_height = 1;
             active_components.push(status_line);
         }
@@ -68,10 +72,16 @@ impl Editor {
         recalculate_layouts(&mut self.active_components)?;
 
         // Only update status line if enabled and some time has passed, or if something changed.
-        let needs_status_update = (self.mode != self.last_mode) || self.active_components.get(self.focused_idx)
-            .map(|c| c.needs_update).unwrap_or(false);
+        let needs_status_update = (self.mode != self.last_mode)
+            || self
+                .active_components
+                .get(self.focused_idx)
+                .map(|c| c.needs_update)
+                .unwrap_or(false);
 
-        if self.config.status_line.enabled && (self.last_status_update.elapsed() > Duration::from_secs(1) || needs_status_update) {
+        if self.config.status_line.enabled
+            && (self.last_status_update.elapsed() > Duration::from_secs(1) || needs_status_update)
+        {
             update_status_line(
                 &mut self.active_components,
                 &self.config.status_line,
@@ -136,14 +146,21 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
         }
 
         // Wait for input with a timeout to avoid busy-waiting
-        let timeout = editor.active_components.iter()
+        let timeout = editor
+            .active_components
+            .iter()
             .filter_map(|c| c.timer)
             .min()
             .unwrap_or(Duration::from_millis(100));
 
         if crossterm::event::poll(timeout)? {
             let old_mode = editor.mode;
-            let action = handle_mode_input(&mut editor.mode, read_input()?, &mut editor.active_components, editor.focused_idx);
+            let action = handle_mode_input(
+                &mut editor.mode,
+                read_input()?,
+                &mut editor.active_components,
+                editor.focused_idx,
+            );
 
             if editor.mode != old_mode {
                 log(format!("Mode change: {:?} -> {:?}", old_mode, editor.mode))?;
@@ -161,7 +178,11 @@ pub fn run(args: Args) -> Result<(), Box<dyn Error>> {
                 )?,
             }
 
-            if !editor.active_components.iter().any(|c| c.component_type == ComponentType::Buffer) {
+            if !editor
+                .active_components
+                .iter()
+                .any(|c| c.component_type == ComponentType::Buffer)
+            {
                 break;
             }
             needs_redraw = true;
@@ -176,7 +197,11 @@ fn terminal_width() -> Result<u16, Box<dyn Error>> {
     Ok(w)
 }
 
-fn startup(args: &Args, active_components: &mut Vec<Component>, config: &crate::config::Config) -> Result<usize, Box<dyn Error>> {
+fn startup(
+    args: &Args,
+    active_components: &mut Vec<Component>,
+    config: &crate::config::Config,
+) -> Result<usize, Box<dyn Error>> {
     log_startup("Barcode", "pre-alpha")?;
 
     for file in &args.files {

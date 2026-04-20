@@ -1,8 +1,6 @@
+use crate::{action::CursorActions, component::Component, config::Config, modal::Mode};
 use crossterm::event::{self, Event, KeyEvent};
-use std::error::Error;
-use std::io;
-
-use crate::{action::CursorActions, component::Component, modal::Mode, config::Config};
+use std::{error::Error, io};
 
 pub enum InputEvent {
     Key(KeyEvent),
@@ -26,7 +24,12 @@ pub struct Cursor {
 
 impl Cursor {
     pub fn new(x: u16, y: u16, hidden: bool) -> Cursor {
-        Cursor { x, y, target_x: x, hidden }
+        Cursor {
+            x,
+            y,
+            target_x: x,
+            hidden,
+        }
     }
     pub fn move_abs(
         &mut self,

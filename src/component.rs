@@ -7,8 +7,7 @@ use crate::{
     window::{HorizontalAnchor, VerticalAnchor, Window, WindowType},
 };
 use crossterm::style::Color;
-use std::error::Error;
-use std::time::Duration;
+use std::{error::Error, time::Duration};
 use unicode_width::UnicodeWidthChar;
 
 pub struct Component {
